@@ -27,3 +27,11 @@ alias gpu="watch -n 1 nvidia-smi"
 alias lpu="watch -n 1 hyperdex-smi"
 
 # Projects
+if [ -d $HOME/projects/aida/ ]; then
+  export AIDA_HOME=$HOME/projects/aida/
+  source $AIDA_HOME/.setup.sh
+fi
+if [ -d $HOME/projects/bertha/ ]; then
+  export BERTHA_HOME=$HOME/projects/bertha/
+  source $BERTHA_HOME/.setup.sh
+fi
