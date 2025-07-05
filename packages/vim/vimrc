@@ -1,0 +1,128 @@
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" VIM Configurations
+""
+"" Authors: Junsoo  Kim     ( js.kim@hyperaccel.ai                )
+"" Version: 1.0.0
+"" Date:    2024.01.24      ( v1.0.0                              )
+""
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" Common Settings
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+" Initial settings
+set nocompatible
+filetype off
+syntax on
+
+" General settings
+set nu
+set hlsearch
+set autoindent
+set autowrite
+set autoread
+set scrolloff=6
+set cindent
+set history=256
+set laststatus=2
+set shiftwidth=2
+set showmatch
+set smartcase
+set smarttab
+set smartindent
+set softtabstop=2
+set tabstop=2
+set expandtab
+set incsearch
+set backspace=indent,eol,start
+set clipboard=unnamedplus
+" Remember cursor location
+au BufReadPost *
+ \ if line("'\"") > 0 && line("'\"") <= line("$") |
+ \ exe "norm g`\"" |
+ \ endif
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" VIM Vundle Pulgins
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+" Vundle manager
+Plugin 'VundleVim/Vundle.vim'
+" VScode theme
+Plugin 'tomasiser/vim-code-dark'
+" File tree
+Plugin 'scrooloose/nerdtree'
+Plugin 'michaeljsmith/vim-indent-object'
+Plugin 'tiagofumo/vim-nerdtree-syntax-highlight'
+Plugin 'ryanoasis/vim-devicons'
+" Status bar
+Plugin 'vim-airline/vim-airline'
+Plugin 'vim-airline/vim-airline-themes'
+Plugin 'tpope/vim-fugitive'
+Plugin 'ctrlpvim/ctrlp.vim'
+Plugin 'edkolev/tmuxline.vim'
+" Neat vundles
+Plugin 'scrooloose/syntastic'
+Plugin 'Raimondi/delimitMate'
+Plugin 'airblade/vim-gitgutter'
+Plugin 'jiangmiao/auto-pairs'
+Plugin 'preservim/nerdcommenter'
+call vundle#end()
+filetype plugin indent on
+
+" Vundle configuration
+language en_US.UTF-8
+set encoding=utf-8
+set fileencodings=utf-8,cp949
+
+" VisualStudioCode theme
+color codedark
+
+" Settings for vim-airline
+let g:airline#extensions#tabline#enabled = 1
+let g:airline_powerline_fonts = 1
+let g:airline_theme= 'tomorrow'
+let g:Powerline_symbols = 'fancy'
+
+" Settings for vim-ctrlp
+let g:ctrlp_custom_ignore = {
+  \ 'dir':  '\.git$\|public$\|log$\|tmp$\|vendor$',
+  \ 'file': '\v\.(exe|so|dll)$'
+\ }
+
+" Default settings for vim-gitgutter
+let g:gitgutter_max_signs = 500
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" Key Mappings
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+map <C-G>       <ESC>:NERDTreeToggle<CR>
+map <C-F>       <ESC>:NERDTreeFocus<CR>
+map <C-L>       <ESC>:bnext!<CR>
+map <C-H>    <ESC>:bprevious!<CR>
+
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+"" Nerd-Tree Enviornmentss
+""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
+
+let g:NERDTreeGitStatusIndicatorMapCustom = {
+  \ 'Modified'  :'✹',
+  \ 'Staged'    :'✚',
+  \ 'Untracked' :'✭',
+  \ 'Renamed'   :'➜',
+  \ 'Unmerged'  :'═',
+  \ 'Deleted'   :'✖',
+  \ 'Dirty'     :'✗',
+  \ 'Ignored'   :'☒',
+  \ 'Clean'     :'✔︎',
+  \ 'Unknown'   :'?',
+\ }
+
+" If another buffer tries to replace NERDTree, put it in the other window, and bring back NERDTree.
+autocmd BufEnter * if bufname('#') =~ 'NERD_tree_\d\+' && bufname('%') !~ 'NERD_tree_\d\+' && winnr('$') > 1 |
+  \ let buf=bufnr() | buffer# | execute "normal! \<C-W>w" | execute 'buffer'.buf | endif
+

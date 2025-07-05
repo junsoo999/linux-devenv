@@ -1,0 +1,58 @@
+# Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
+# Initialization code that may require console input (password prompts, [y/n]
+# confirmations, etc.) must go above this block; everything else may go below.
+if [[ -r "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh" ]]; then
+  source "${XDG_CACHE_HOME:-$HOME/.cache}/p10k-instant-prompt-${(%):-%n}.zsh"
+fi
+
+# Oh-My-Zsh
+if [ -f ~/.zsh_ohmyzsh ]; then
+  . ~/.zsh_ohmyzsh
+fi
+
+# Alias definitions
+if [ -f ~/.zsh_variables ]; then
+  . ~/.zsh_variables
+fi
+
+if [ -f ~/.zsh_aliases ]; then
+  . ~/.zsh_aliases
+fi
+
+# To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
+[[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# Xilinx XRT
+if [ -f /tools/Xilinx/Vivado/2022.2/settings64.sh ]; then
+  source /tools/Xilinx/Vivado/2022.2/settings64.sh
+fi
+if [ -f /tools/Xilinx/Vitis/2022.2/settings64.sh ]; then
+  source /tools/Xilinx/Vitis/2022.2/settings64.sh
+fi
+if [ -f /opt/xilinx/xrt/setup.sh ]; then
+  source /opt/xilinx/xrt/setup.sh > /dev/null
+fi
+
+# NVIDIA CUDA
+if [ -d /usr/local/cuda ]; then
+  export PATH=/usr/local/cuda/bin:$PATH
+  export LD_LIBRARY_PATH=/usr/local/cuda/lib64:$LD_LIBRARY_PATH
+fi
+
+# Miniconda3 initialize
+__conda_setup="$('$HOME/documents/miniconda3/bin/conda' 'shell.zsh' 'hook' 2> /dev/null)"
+if [ $? -eq 0 ]; then
+  eval "$__conda_setup"
+else
+  if [ -f "$HOME/documents/miniconda3/etc/profile.d/conda.sh" ]; then
+    . "$HOME/documents/miniconda3/etc/profile.d/conda.sh"
+  else
+    export PATH="$HOME/documents/miniconda3/bin:$PATH"
+  fi
+fi
+unset __conda_setup
+
+# Add user local path
+# Need higher priority than previous system path
+export PATH=$HOME/.local/bin:$PATH
+export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$HOME/.local/lib
