@@ -77,10 +77,10 @@ linux-devenv/
     ├── vim/
     │   └── vimrc          # Vim 설정 파일
     └── zsh/
-        ├── zshrc          # Z-Shell 메인 설정
-        ├── zsh_aliases    # Z-Shell 별칭 설정
-        ├── zsh_ohmyzsh    # Oh My Zsh 설정
-        └── p10k.zsh       # Powerlevel10k 테마 설정
+        ├── zshrc          # Z-Shell 메인 설정 (~/.zshrc)
+        ├── aliases.zsh    # Z-Shell 별칭 (~/.oh-my-zsh/custom/aliases.zsh)
+        ├── devconfig      # 개발 환경 변수 (~/.devconfig)
+        └── p10k.zsh       # Powerlevel10k 테마 (~/.p10k.zsh)
 ```
 
 ## ⚡ 주요 기능
@@ -88,15 +88,8 @@ linux-devenv/
 ### 1. Z-Shell (Oh My Zsh) 설정
 - **Oh My Zsh** 프레임워크 설치
 - **Powerlevel10k** 테마 적용
-- **다양한 플러그인** 자동 설치:
-  - `zsh-autosuggestions`: 명령어 자동 완성
-  - `zsh-syntax-highlighting`: 구문 강조
-  - `zsh-history-substring-search`: 히스토리 검색
-  - `you-should-use`: alias 제안
-  - `nvm`: Node.js 버전 관리
-  - `fzf`: 퍼지 검색
-  - `thefuck`: 명령어 수정 제안
-  - `autojump`: 디렉토리 점프
+- **커스텀 플러그인** 자동 설치: `zsh-autosuggestions`, `zsh-syntax-highlighting`, `zsh-history-substring-search`, `you-should-use`
+- **선택 도구** 미설치 시 자동 설치 시도: `fzf`(git clone + install), `thefuck`(pip 또는 apt), `autojump`(apt). apt 사용 시 sudo 필요 여부를 한 번 묻고 진행
 
 ### 2. Vim 에디터 설정
 - **Vundle** 플러그인 매니저 설치
@@ -110,18 +103,11 @@ linux-devenv/
   - `vim-gitgutter`: Git 변경사항 표시
   - `nerdcommenter`: 주석 관리
 
-### 3. 프로젝트 디렉토리 구조
-자동으로 생성되는 디렉토리 구조:
+### 3. 디렉토리 구조
+`install_dir.sh` 실행 시 HOME 아래에 다음 디렉토리만 생성됩니다:
 ```
 $HOME/
-├── documents/          # 문서 저장소
-├── downloads/          # 다운로드 폴더
-├── projects/           # 프로젝트 폴더
-│   ├── aida/          # AIDA 프로젝트
-│   │   └── .setup.sh  # 프로젝트별 설정
-│   └── bertha/        # BERTHA 프로젝트
-│       └── .setup.sh  # 프로젝트별 설정
-└── tasks/             # 작업 관리 폴더
+└── workspace/          # 작업 디렉토리
 ```
 
 ## 🛠️ 사용법
@@ -145,7 +131,7 @@ make clean
 ### 개별 스크립트 실행
 
 ```bash
-# 디렉토리 구조 생성
+# HOME 아래 workspace 디렉토리 생성
 ./scripts/install_dir.sh
 
 # Z-Shell 설치
@@ -155,37 +141,22 @@ make clean
 ./scripts/install_vim.sh
 ```
 
-### 프로젝트별 설정 사용
-
-각 프로젝트 디렉토리에는 `.setup.sh` 파일이 생성되어 프로젝트별 alias와 설정을 제공합니다:
-
-```bash
-# AIDA 프로젝트로 이동
-aida
-
-# BERTHA 프로젝트로 이동
-ber
-
-# 프로젝트별 개발 명령어
-aida-run    # AIDA 프로젝트 실행
-ber-build   # BERTHA 프로젝트 빌드
-```
-
 ## ⚙️ 설정 파일
 
-### Z-Shell 설정 (`packages/zsh/zshrc`)
-- Powerlevel10k 인스턴트 프롬프트 활성화
-- Oh My Zsh 프레임워크 로드
-- NVIDIA CUDA 환경 변수 설정
-- UV Framework 환경 설정
+### Z-Shell 설정 (`packages/zsh/zshrc` → `~/.zshrc`)
+- Powerlevel10k 테마, Oh My Zsh 프레임워크 로드
+- `~/.p10k.zsh`, `~/.fzf.zsh`, `~/.devconfig` 소스
 
-### Z-Shell 별칭 (`packages/zsh/zsh_aliases`)
+### Z-Shell 별칭 (`packages/zsh/aliases.zsh` → `~/.oh-my-zsh/custom/aliases.zsh`)
 - **파일 관리**: `ll`, `la`, `l` (ls 명령어 확장)
 - **권한 관리**: `chdir` (소유권 변경)
 - **터미널 관리**: `tt`, `tkill` (tmux 관리)
 - **빌드 최적화**: `fmake` (병렬 빌드)
 - **모니터링**: `gpu`, `lpu` (GPU 모니터링)
 - **설정 편집**: `vc`, `va`, `vv` (설정 파일 편집)
+
+### 개발 환경 변수 (`packages/zsh/devconfig` → `~/.devconfig`)
+- 개발용 환경 변수 및 설정 (스크립트에서 소스됨)
 
 ### Vim 설정 (`packages/vim/vimrc`)
 - **일반 설정**: 번호 표시, 구문 강조, 자동 들여쓰기
@@ -214,6 +185,6 @@ Body Message
 [SW-123] Add zsh autosuggestions plugin
 
 - Install zsh-autosuggestions for better command completion
-- Configure plugin in zsh_ohmyzsh file
+- Configure plugin in zshrc
 - Update installation script to include new plugin
 ```
