@@ -27,10 +27,59 @@ git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:
 git clone https://github.com/zsh-users/zsh-history-substring-search ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-history-substring-search
 git clone https://github.com/MichaelAquilina/zsh-you-should-use ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/you-should-use
 
-# Setup zsh script files
-cp packages/zsh/zshrc $HOME/.zshrc
-cp packages/zsh/zsh_aliases $HOME/.zsh_aliases
-cp packages/zsh/zsh_ohmyzsh $HOME/.zsh_ohmyzsh
-cp packages/zsh/p10k.zsh $HOME/.p10k.zsh
+# Install optional dependencies (fzf, thefuck, autojump)
+export PATH="$HOME/.local/bin:$HOME/bin:$PATH"
+NEED_SUDO=0
+APT_PACKAGES=()
+
+if ! command -v fzf &> /dev/null; then
+    if [[ ! -d "$HOME/.fzf" ]]; then
+        git clone --depth 1 https://github.com/junegunn/fzf.git "$HOME/.fzf"
+    fi
+    if [[ -x "$HOME/.fzf/install" ]]; then
+        "$HOME/.fzf/install" --all
+    fi
+fi
+
+if ! command -v thefuck &> /dev/null; then
+    if command -v pip3 &> /dev/null; then
+        pip3 install --user thefuck 2>/dev/null || true
+    fi
+    if command -v pip &> /dev/null && ! command -v thefuck &> /dev/null; then
+        pip install --user thefuck 2>/dev/null || true
+    fi
+    if ! command -v thefuck &> /dev/null; then
+        APT_PACKAGES+=(thefuck)
+        NEED_SUDO=1
+    fi
+fi
+
+if ! command -v autojump &> /dev/null; then
+    APT_PACKAGES+=(autojump)
+    NEED_SUDO=1
+fi
+
+if [[ $NEED_SUDO -eq 1 && ${#APT_PACKAGES[@]} -gt 0 ]]; then
+    if command -v apt-get &> /dev/null || command -v apt &> /dev/null; then
+        read -p "일부 패키지 설치에 sudo가 필요합니다. 계속할까요? [y/N] " -n 1 -r
+        echo
+        if [[ $REPLY =~ ^[Yy]$ ]]; then
+            if command -v apt-get &> /dev/null; then
+                sudo apt-get update
+                sudo apt-get install -y "${APT_PACKAGES[@]}"
+            else
+                sudo apt update
+                sudo apt install -y "${APT_PACKAGES[@]}"
+            fi
+        fi
+    fi
+fi
+
+# Setup zsh config files
+cp packages/zsh/zshrc "$HOME/.zshrc"
+cp packages/zsh/devconfig "$HOME/.devconfig"
+cp packages/zsh/p10k.zsh "$HOME/.p10k.zsh"
+mkdir -p "$HOME/.oh-my-zsh/custom"
+cp packages/zsh/aliases.zsh "$HOME/.oh-my-zsh/custom/aliases.zsh"
 
 ##########################################################################
