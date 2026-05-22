@@ -11,5 +11,6 @@
 
 # Create workspace directory under HOME
 mkdir -p "$HOME/workspace"
+mkdir -p "$HOME/worktrees"
 
 ##########################################################################
