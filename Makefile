@@ -3,7 +3,7 @@
 # Default target
 help:
 	@echo "Available commands:"
-	@echo "  install     - Install all development tools (zsh, vim)"
+	@echo "  install     - Install all development tools (zsh, vim, tmux)"
 	@echo "  setup       - Setup directory structure"
 	@echo "  clean       - Clean up temporary files"
 
@@ -26,3 +26,5 @@ install: setup
 	@./scripts/install_zsh.sh
 	@echo "Installing vim..."
 	@./scripts/install_vim.sh
+	@echo "Installing tmux..."
+	@./scripts/install_tmux.sh

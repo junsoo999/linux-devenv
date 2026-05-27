@@ -20,6 +20,7 @@ Linux 서버 환경에서 개발에 필요한 도구들을 자동으로 설치�
 
 - **Z-Shell (Oh My Zsh)** 설치 및 설정
 - **Vim** 에디터 및 플러그인 설치
+- **Tmux** 터미널 멀티플렉서 및 TPM 플러그인 설치
 - **Powerlevel10k** 테마 설정
 - **프로젝트 디렉토리 구조** 자동 생성
 - **개발 환경 변수** 및 **alias** 설정
@@ -59,6 +60,9 @@ make setup
 
 # Vim만 설치
 ./scripts/install_vim.sh
+
+# Tmux만 설치
+./scripts/install_tmux.sh
 ```
 
 ## 📁 프로젝트 구조
@@ -72,10 +76,13 @@ linux-devenv/
 ├── scripts/                # 설치 스크립트들
 │   ├── install_dir.sh      # 디렉토리 구조 생성
 │   ├── install_zsh.sh      # Z-Shell 설치
-│   └── install_vim.sh      # Vim 설치
+│   ├── install_vim.sh      # Vim 설치
+│   └── install_tmux.sh     # Tmux 설치
 └── packages/               # 설정 파일들
     ├── vim/
     │   └── vimrc          # Vim 설정 파일
+    ├── tmux/
+    │   └── tmux.conf      # Tmux 설정 파일 (~/.tmux.conf)
     └── zsh/
         ├── zshrc          # Z-Shell 메인 설정 (~/.zshrc)
         ├── aliases.zsh    # Z-Shell 별칭 (~/.oh-my-zsh/custom/aliases.zsh)
@@ -103,7 +110,14 @@ linux-devenv/
   - `vim-gitgutter`: Git 변경사항 표시
   - `nerdcommenter`: 주석 관리
 
-### 3. 디렉토리 구조
+### 3. Tmux 설정
+- **TPM(Tmux Plugin Manager)** 자동 설치
+- **플러그인 자동 설치**: `tmux-sensible`, `tmux-resurrect`, `tmux-continuum`, `vim-tmux-navigator`
+- **Catppuccin 컬러 스타일** 상태바 및 패널 보더
+- **Vi 스타일 copy mode** 및 클립보드 연동
+- **마우스 지원**, **24bit 트루컬러**, history 50,000 라인
+
+### 4. 디렉토리 구조
 `install_dir.sh` 실행 시 HOME 아래에 다음 디렉토리만 생성됩니다:
 ```
 $HOME/
@@ -139,6 +153,9 @@ make clean
 
 # Vim 설치
 ./scripts/install_vim.sh
+
+# Tmux 설치
+./scripts/install_tmux.sh
 ```
 
 ## ⚙️ 설정 파일
@@ -157,6 +174,14 @@ make clean
 
 ### 개발 환경 변수 (`packages/zsh/devconfig` → `~/.devconfig`)
 - 개발용 환경 변수 및 설정 (스크립트에서 소스됨)
+
+### Tmux 설정 (`packages/tmux/tmux.conf` → `~/.tmux.conf`)
+- **Prefix**: 기본 `Ctrl-b` 유지 (옵션으로 `Ctrl-a` 주석 처리되어 있음)
+- **분할**: `prefix |` (수평), `prefix -` (수직) — 현재 경로 유지
+- **패널 이동**: `Alt + 화살표` 또는 `prefix + hjkl` (vim 스타일)
+- **윈도우 이동**: `Shift + 화살표` 또는 `prefix + n/p`
+- **Copy mode**: vi 키맵, `v`로 선택, `y`로 복사 (클립보드 연동)
+- **플러그인**: TPM으로 관리, `prefix + I`로 신규 설치 / `prefix + U`로 업데이트
 
 ### Vim 설정 (`packages/vim/vimrc`)
 - **일반 설정**: 번호 표시, 구문 강조, 자동 들여쓰기
