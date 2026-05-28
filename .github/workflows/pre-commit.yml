@@ -1,0 +1,29 @@
+name: pre-commit-validation
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10"
+
+      - name: Sync dev dependencies
+        run: uv sync --only-group dev
+
+      - name: Run pre-commit on PR
+        run: |
+          uv run --no-sync pre-commit run \
+            --from-ref=origin/${{ github.base_ref }} \
+            --to-ref=HEAD

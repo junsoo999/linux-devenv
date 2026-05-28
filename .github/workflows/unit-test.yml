@@ -1,0 +1,34 @@
+name: unit-test
+
+on:
+  pull_request:
+    branches:
+      - main
+    paths:
+      - "devenv/**"
+      - "tests/unit_test/**"
+      - "pyproject.toml"
+      - "uv.lock"
+      - "Makefile"
+      - "scripts/**"
+      - ".github/workflows/unit-test.yml"
+      - ".github/workflows/pytest-helper.yml"
+  workflow_dispatch:
+
+permissions:
+  pull-requests: write
+  contents: read
+  id-token: write
+  checks: write
+
+jobs:
+  python-unit-test:
+    uses: ./.github/workflows/pytest-helper.yml
+    secrets: inherit
+    with:
+      test_name: "Python Unit Test"
+      test_path: "tests/unit_test"
+      test_workers: ${{ fromJSON(vars.PYTEST_WORKERS || '1') }}
+      python_version: "3.10"
+      enable_coverage: false
+      enable_comment: true

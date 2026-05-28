@@ -1,0 +1,4 @@
+default: true
+MD013: false  # line-length — long URLs and tables exceed 80 cols
+MD033: false  # inline HTML allowed (badges, anchors)
+MD041: false  # first line can be a badge block rather than H1

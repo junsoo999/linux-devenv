@@ -1,1 +1,14 @@
 .specstory/
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.ruff_cache/
+.pytest_cache/
+.coverage
+coverage.xml
+pytest-report.xml

@@ -1,0 +1,45 @@
+name: uv-lock-update
+
+on:
+  schedule:
+    - cron: "0 3 * * 1" # Run weekly on Monday at 12:00 KST (03:00 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+  id-token: write
+
+jobs:
+  update_lockfile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10"
+
+      - name: Upgrade uv.lock
+        run: uv lock --upgrade
+
+      - name: Stage uv.lock (if changed)
+        run: |
+          if ! git diff --quiet uv.lock; then
+            git add uv.lock
+          fi
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v8
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "[BOT] Automated `uv.lock` update"
+          title: "[BOT] Automated `uv.lock` update"
+          body: "This PR updates the `uv.lock` file to the latest dependency versions."
+          branch: "automated-uv-lock-update"
+          base: "main"
+          labels: "CI/CD"

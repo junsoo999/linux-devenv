@@ -1,0 +1,49 @@
+default_stages:
+  - pre-commit
+  - manual
+
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.14.0
+    hooks:
+      - id: ruff-format
+        stages: [pre-commit]
+      - id: ruff
+        args: [--fix]
+        stages: [pre-commit]
+
+  - repo: https://github.com/NSPBot911/ty-pre-commit
+    rev: v0.0.13
+    hooks:
+      - id: ty-check
+        args: ["--ignore=unresolved-import", "--ignore=unused-ignore-comment"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v3.2.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: ^devenv/packages/
+      - id: end-of-file-fixer
+        exclude: ^devenv/packages/
+      - id: check-yaml
+      - id: check-added-large-files
+
+  - repo: https://github.com/openstack/bashate
+    rev: 2.1.1
+    hooks:
+      - id: bashate
+        name: bashate
+        description: Lint project shell scripts (excludes vendored dotfiles)
+        entry: bashate
+        language: python
+        types: [shell]
+        exclude: ^devenv/packages/
+
+  - repo: https://github.com/igorshubovych/markdownlint-cli
+    rev: v0.45.0
+    hooks:
+      - id: markdownlint
+        exclude: ^\.github/
+
+default_language_version:
+  python: python3.10

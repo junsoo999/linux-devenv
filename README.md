@@ -1,215 +1,141 @@
-# Linux Development Environment Setup
+<!---
+Copyright 2026 The HyperAccel. All rights reserved.
+-->
 
-Linux 서버 환경에서 개발에 필요한 도구들을 자동으로 설치하고 설정하는 프로젝트입니다.
+<h3 align="center">
+Linux 서버 개발 환경(Z-Shell · Vim · Tmux)을 한 줄로 부트스트랩하는 Click 기반 CLI
+</h3>
 
-## 📋 목차
+<p align="center">
+| <a href="./CONTRIBUTING.md"><b>Contributing</b></a> | <a href="./CLAUDE.md"><b>Agent Guide</b></a> | <a href="https://hyperaccel.ai"><b>Company Information</b></a> |
+</p>
 
-- [프로젝트 개요](#프로젝트-개요)
-- [시스템 요구사항](#시스템-요구사항)
-- [설치 방법](#설치-방법)
-- [프로젝트 구조](#프로젝트-구조)
-- [주요 기능](#주요-기능)
-- [사용법](#사용법)
-- [설정 파일](#설정-파일)
-- [커밋 메시지 규칙](#커밋-메시지-규칙)
-- [문제 해결](#문제-해결)
+---
 
-## 🎯 프로젝트 개요
+`linux-devenv`은 HyperAccel Simulator 팀이 새 Linux 서버를 받았을 때 **팀 공통의 셸·에디터·멀티플렉서 환경을 한 번에 재현**하기 위한 도구입니다. 설치 로직은 모두 **Click 기반 Python CLI (`devenv`)** 로 작성되어 있고, 사용자 dotfile은 패키지에 번들된 정적 자산(`devenv/packages/`)으로 관리됩니다.
 
-이 프로젝트는 Linux 서버 환경에서 개발 작업을 위한 필수 도구들을 자동으로 설치하고 설정하는 스크립트 모음입니다. 다음과 같은 기능을 제공합니다:
+## ✨ 주요 특징
 
-- **Z-Shell (Oh My Zsh)** 설치 및 설정
-- **Vim** 에디터 및 플러그인 설치
-- **Tmux** 터미널 멀티플렉서 및 TPM 플러그인 설치
-- **Powerlevel10k** 테마 설정
-- **프로젝트 디렉토리 구조** 자동 생성
-- **개발 환경 변수** 및 **alias** 설정
+- **한 줄 부트스트랩**: `devenv install` 한 번으로 oh-my-zsh + powerlevel10k + Vim/Vundle + Tmux/TPM + 표준 플러그인까지 동시 설치
+- **멱등성 기본**: 모든 단계가 N번 실행해도 안전하도록 헬퍼 레벨에서 가드 (`git_clone_idempotent`, `deploy_dotfile`)
+- **비파괴 백업**: 기존 dotfile은 `<file>.bak.<UTC-timestamp>`로 자동 백업, `--force`만 백업 생략
+- **Dry-run 지원**: `--dry-run`으로 실제 실행 없이 명령 시퀀스만 확인
+- **테스트 격리**: `--home <path>`로 임의 디렉토리를 HOME으로 지정 가능 → CI / 컨테이너 / 단위 테스트에서 안전
+- **품질 검증 파이프라인**: pre-commit + ruff + ty + pytest + bashate + markdownlint
 
-## 💻 시스템 요구사항
+## 🗂️ 디렉토리 구조
 
-### 필수 요구사항
-- **운영체제**: Linux (Ubuntu, CentOS, Debian 등)
-- **권한**: sudo 권한이 있는 사용자 계정
-- **네트워크**: 인터넷 연결 (GitHub, 패키지 저장소 접근)
+```text
+linux-devenv/
+├── devenv/                        # Python 패키지 (핵심)
+│   ├── __init__.py                # __version__
+│   ├── cli/                       # Click CLI 구현
+│   │   ├── __init__.py            # Click group + _TOOL_REGISTRY
+│   │   ├── _installer.py          # InstallContext + 공통 헬퍼
+│   │   ├── _platform.py           # Linux 가드
+│   │   ├── _dir.py                # workspace 디렉토리 생성
+│   │   ├── _zsh.py                # zsh + oh-my-zsh + p10k + 플러그인
+│   │   ├── _vim.py                # vim + Vundle + 플러그인
+│   │   └── _tmux.py               # tmux + TPM + 플러그인
+│   └── packages/                  # dotfile 자산 (wheel package-data)
+│       ├── zsh/{zshrc,aliases.zsh,devconfig,p10k.zsh}
+│       ├── vim/vimrc
+│       └── tmux/tmux.conf
+├── tests/unit_test/               # pytest + CliRunner + fake_home fixture
+├── scripts/install_packages.sh    # uv sync + pre-commit install 부트스트랩
+├── pyproject.toml                 # devenv 패키지 정의 (`devenv` 엔트리)
+├── .pre-commit-config.yaml
+├── Makefile                       # install / lint / test / clean (uv 위임)
+├── README.md
+├── CONTRIBUTING.md
+└── CLAUDE.md                      # Claude Code 에이전트 진입점
+```
 
-### 권장 사항
-- **메모리**: 최소 2GB RAM
-- **저장공간**: 최소 1GB 여유 공간
-- **터미널**: 256색 이상 지원하는 터미널
+`devenv/cli/`(실행 로직)와 `devenv/packages/`(dotfile 자산)는 역할이 명확히 분리됩니다. 새 도구를 추가할 땐 두 곳을 함께 건드립니다.
 
-## 🚀 설치 방법
+## 🚀 시작하기
 
-### 1. 프로젝트 클론
+### 1. 레포지토리 Clone
+
 ```bash
-git clone <repository-url>
+git clone https://github.com/Hyper-Accel/linux-devenv.git
 cd linux-devenv
 ```
 
-### 2. 전체 환경 설치
-```bash
-make install
-```
-
-### 3. 개별 도구 설치
-```bash
-# 디렉토리 구조만 설정
-make setup
-
-# Z-Shell만 설치
-./scripts/install_zsh.sh
-
-# Vim만 설치
-./scripts/install_vim.sh
-
-# Tmux만 설치
-./scripts/install_tmux.sh
-```
-
-## 📁 프로젝트 구조
-
-```
-linux-devenv/
-├── Makefile                 # 메인 빌드 스크립트
-├── README.md               # 프로젝트 문서
-├── .gitmessage.txt         # Git 커밋 메시지 템플릿
-├── .gitignore              # Git 무시 파일 목록
-├── scripts/                # 설치 스크립트들
-│   ├── install_dir.sh      # 디렉토리 구조 생성
-│   ├── install_zsh.sh      # Z-Shell 설치
-│   ├── install_vim.sh      # Vim 설치
-│   └── install_tmux.sh     # Tmux 설치
-└── packages/               # 설정 파일들
-    ├── vim/
-    │   └── vimrc          # Vim 설정 파일
-    ├── tmux/
-    │   └── tmux.conf      # Tmux 설정 파일 (~/.tmux.conf)
-    └── zsh/
-        ├── zshrc          # Z-Shell 메인 설정 (~/.zshrc)
-        ├── aliases.zsh    # Z-Shell 별칭 (~/.oh-my-zsh/custom/aliases.zsh)
-        ├── devconfig      # 개발 환경 변수 (~/.devconfig)
-        └── p10k.zsh       # Powerlevel10k 테마 (~/.p10k.zsh)
-```
-
-## ⚡ 주요 기능
-
-### 1. Z-Shell (Oh My Zsh) 설정
-- **Oh My Zsh** 프레임워크 설치
-- **Powerlevel10k** 테마 적용
-- **커스텀 플러그인** 자동 설치: `zsh-autosuggestions`, `zsh-syntax-highlighting`, `zsh-history-substring-search`, `you-should-use`
-- **선택 도구** 미설치 시 자동 설치 시도: `fzf`(git clone + install), `thefuck`(pip 또는 apt), `autojump`(apt). apt 사용 시 sudo 필요 여부를 한 번 묻고 진행
-
-### 2. Vim 에디터 설정
-- **Vundle** 플러그인 매니저 설치
-- **다양한 플러그인** 자동 설치:
-  - `vim-code-dark`: VSCode 다크 테마
-  - `nerdtree`: 파일 탐색기
-  - `vim-airline`: 상태바
-  - `vim-fugitive`: Git 통합
-  - `ctrlp`: 파일 검색
-  - `syntastic`: 문법 검사
-  - `vim-gitgutter`: Git 변경사항 표시
-  - `nerdcommenter`: 주석 관리
-
-### 3. Tmux 설정
-- **TPM(Tmux Plugin Manager)** 자동 설치
-- **플러그인 자동 설치**: `tmux-sensible`, `tmux-resurrect`, `tmux-continuum`, `vim-tmux-navigator`
-- **Catppuccin 컬러 스타일** 상태바 및 패널 보더
-- **Vi 스타일 copy mode** 및 클립보드 연동
-- **마우스 지원**, **24bit 트루컬러**, history 50,000 라인
-
-### 4. 디렉토리 구조
-`install_dir.sh` 실행 시 HOME 아래에 다음 디렉토리만 생성됩니다:
-```
-$HOME/
-└── workspace/          # 작업 디렉토리
-```
-
-## 🛠️ 사용법
-
-### Makefile 명령어
+### 2. 개발자 부트스트랩 (uv 환경 + pre-commit)
 
 ```bash
-# 도움말 보기
-make help
-
-# 전체 환경 설치 (Linux 서버에서만 실행 가능)
-make install
-
-# 디렉토리 구조만 설정
-make setup
-
-# 임시 파일 정리
-make clean
+make install                       # Python 3.10 (기본)
+make install PYTHON_VERSION=3.12   # 다른 버전 지정
 ```
 
-### 개별 스크립트 실행
+내부적으로 `scripts/install_packages.sh`를 호출하며, 직접 실행해도 동일합니다. 이 단계는 **개발자용**이고, 실제 zsh/vim/tmux 환경은 다음 단계에서 설치합니다.
+
+### 3. `devenv` CLI 설치
 
 ```bash
-# HOME 아래 workspace 디렉토리 생성
-./scripts/install_dir.sh
-
-# Z-Shell 설치
-./scripts/install_zsh.sh
-
-# Vim 설치
-./scripts/install_vim.sh
-
-# Tmux 설치
-./scripts/install_tmux.sh
+uv pip install -e .          # editable
+devenv --help
 ```
 
-## ⚙️ 설정 파일
+### 4. 실제 환경 설치
 
-### Z-Shell 설정 (`packages/zsh/zshrc` → `~/.zshrc`)
-- Powerlevel10k 테마, Oh My Zsh 프레임워크 로드
-- `~/.p10k.zsh`, `~/.fzf.zsh`, `~/.devconfig` 소스
-
-### Z-Shell 별칭 (`packages/zsh/aliases.zsh` → `~/.oh-my-zsh/custom/aliases.zsh`)
-- **파일 관리**: `ll`, `la`, `l` (ls 명령어 확장)
-- **권한 관리**: `chdir` (소유권 변경)
-- **터미널 관리**: `tt`, `tkill` (tmux 관리)
-- **빌드 최적화**: `fmake` (병렬 빌드)
-- **모니터링**: `gpu`, `lpu` (GPU 모니터링)
-- **설정 편집**: `vc`, `va`, `vv` (설정 파일 편집)
-
-### 개발 환경 변수 (`packages/zsh/devconfig` → `~/.devconfig`)
-- 개발용 환경 변수 및 설정 (스크립트에서 소스됨)
-
-### Tmux 설정 (`packages/tmux/tmux.conf` → `~/.tmux.conf`)
-- **Prefix**: 기본 `Ctrl-b` 유지 (옵션으로 `Ctrl-a` 주석 처리되어 있음)
-- **분할**: `prefix |` (수평), `prefix -` (수직) — 현재 경로 유지
-- **패널 이동**: `Alt + 화살표` 또는 `prefix + hjkl` (vim 스타일)
-- **윈도우 이동**: `Shift + 화살표` 또는 `prefix + n/p`
-- **Copy mode**: vi 키맵, `v`로 선택, `y`로 복사 (클립보드 연동)
-- **플러그인**: TPM으로 관리, `prefix + I`로 신규 설치 / `prefix + U`로 업데이트
-
-### Vim 설정 (`packages/vim/vimrc`)
-- **일반 설정**: 번호 표시, 구문 강조, 자동 들여쓰기
-- **플러그인 관리**: Vundle을 통한 플러그인 관리
-- **테마**: VSCode 다크 테마 적용
-- **단축키**: NERDTree, 버퍼 관리 등
-
-## 📝 커밋 메시지 규칙
-
-프로젝트는 `.gitmessage.txt`에 정의된 커밋 메시지 규칙을 따릅니다:
-
-### 형식
-```
-[jira-issue-id] <subject>
-
-Body Message
+```bash
+devenv doctor                # 선행 조건(Linux + zsh/vim/tmux/git/curl) 점검
+devenv install               # 전체 설치 (dir → zsh → vim → tmux)
 ```
 
-### 규칙
-- **제목**: 50자 이내, 명령형 문장, 마침표 없음
-- **본문**: 72자 이내, 무엇과 왜를 설명
-- **JIRA 이슈**: `[SW-123]` 형식으로 이슈 ID 포함
+### 주요 CLI 커맨드
 
-### 예시
-```
-[SW-123] Add zsh autosuggestions plugin
+| 커맨드 | 설명 |
+|---|---|
+| `devenv install` | 전체 도구 설치. `--only zsh,tmux`, `--skip vim`, `--force`, `--dry-run`, `--yes`, `--home PATH` 지원 |
+| `devenv setup` | `$HOME/workspace`, `$HOME/worktrees` 디렉토리만 생성 |
+| `devenv list` | 관리되는 도구 + 설치 상태. `--installed`로 설치된 것만 |
+| `devenv where` | 번들된 dotfile 자산 경로와 기본 HOME |
+| `devenv doctor` | 선행 명령(zsh/vim/tmux/git/curl) 및 OS 점검 |
+| `devenv clean` | `*.bak.<ts>` 백업 파일 정리. `--dry-run` 지원 |
 
-- Install zsh-autosuggestions for better command completion
-- Configure plugin in zshrc
-- Update installation script to include new plugin
-```
+전체 옵션은 `devenv <command> --help`에서 확인할 수 있습니다.
+
+## ✍️ 새로운 도구 추가하기
+
+1. `devenv/cli/_<tool>.py`에 `install(ctx: InstallContext) -> None` 작성 (헬퍼 사용)
+2. `devenv/packages/<tool>/`에 dotfile 자산 배치
+3. `devenv/cli/__init__.py`의 `_register("<tool>", "<desc>", _<tool>.install)`에 등록
+4. `_tool_status()`의 markers 딕셔너리에 한 줄 추가
+5. `tests/unit_test/`에 단위 테스트 추가
+6. `make lint` + `make test` 통과 확인 → PR 제출
+
+자세한 절차와 컨벤션은 [CONTRIBUTING.md](./CONTRIBUTING.md)를 참고하세요.
+
+## 🧰 Make 타깃
+
+| 타깃 | 설명 |
+|---|---|
+| `make install` | 개발자 부트스트랩: `uv sync` + `uv pip install -e .` + pre-commit install (`PYTHON_VERSION=3.10\|3.11\|3.12\|3.13`) |
+| `make lint` | 모든 파일에 pre-commit 훅 실행 |
+| `make test` | `tests/unit_test/` 하위 pytest 실행 (`TEST_WORKERS=N`) |
+| `make clean` | 빌드 산출물·캐시 제거 |
+| `make help` | 타깃 목록 표시 |
+
+> **주의**: `make install`은 **개발자용 부트스트랩**이고, 실제 zsh/vim/tmux 설치는 **`devenv install`** 입니다.
+
+## 🛠 기술 스택
+
+- **언어**: Python 3.10+ (CLI), Bash (부트스트랩 1개)
+- **CLI 프레임워크**: [Click](https://click.palletsprojects.com/) 8.x
+- **패키지 관리**: [uv](https://github.com/astral-sh/uv)
+- **품질 검증**: [pre-commit](https://pre-commit.com/), [Ruff](https://docs.astral.sh/ruff/), [ty](https://github.com/astral-sh/ty), [bashate](https://github.com/openstack/bashate), [markdownlint](https://github.com/igorshubovych/markdownlint-cli)
+- **테스트**: pytest + Click `CliRunner`
+
+## 📄 라이선스
+
+이 프로젝트는 HyperAccel의 소유입니다. 자세한 라이선스 정보는 프로젝트 루트의 라이선스 파일을 참조하세요.
+
+## 📞 지원
+
+- 이슈 리포트: [GitHub Issues](https://github.com/Hyper-Accel/linux-devenv/issues)
+- 이메일: [simulator.team@hyperaccel.ai](mailto:simulator.team@hyperaccel.ai)
+
+---
