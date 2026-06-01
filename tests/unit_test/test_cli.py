@@ -49,7 +49,7 @@ def test_list_shows_all_tools_with_status(tmp_path: Path) -> None:
     home.mkdir()
     result = runner.invoke(cli, ["list", "--home", str(home)])
     assert result.exit_code == 0
-    for name in ("dir", "zsh", "vim", "tmux"):
+    for name in ("dir", "zsh", "nvim", "tmux"):
         assert name in result.output
     assert "missing" in result.output
 
@@ -75,7 +75,7 @@ def test_install_only_and_skip_mutually_exclusive(tmp_path: Path) -> None:
     home.mkdir()
     result = runner.invoke(
         cli,
-        ["install", "--only", "zsh", "--skip", "vim", "--dry-run", "--home", str(home)],
+        ["install", "--only", "zsh", "--skip", "nvim", "--dry-run", "--home", str(home)],
     )
     assert result.exit_code != 0
     assert "함께 쓸 수 없습니다" in result.output

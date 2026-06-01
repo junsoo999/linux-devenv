@@ -30,7 +30,7 @@ include = ["devenv*"]
 [tool.setuptools.package-data]
 devenv = [
     "packages/zsh/*",
-    "packages/vim/*",
+    "packages/nvim/*",
     "packages/tmux/*",
 ]
 

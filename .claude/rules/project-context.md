@@ -9,7 +9,7 @@ alwaysApply: false
 
 `linux-devenv`은 HyperAccel Simulator 팀의 **Linux 서버용 개발 환경 부트스트랩** 레포지토리다. 두 가지 역할을 한다.
 
-1. **Click 기반 Python CLI (`devenv`)** — `uv run devenv install`이 zsh / vim / tmux 및 관련 플러그인을 idempotent하게 설치한다.
+1. **Click 기반 Python CLI (`devenv`)** — `uv run devenv install`이 zsh / nvim / tmux 및 관련 플러그인을 idempotent하게 설치한다.
 2. **Dotfile 자산 (Plain text, package-data)** — `devenv/packages/<tool>/`에 들어 있는 설정 파일을 사용자의 홈 디렉토리(`~/.zshrc`, `~/.tmux.conf` 등)로 배치한다.
 
 목표는 새 서버에서 `git clone && make install && uv run devenv install` 세 단계로 팀 공통 셸/에디터/멀티플렉서 환경을 재현하는 것.
@@ -25,7 +25,7 @@ devenv/
 │   ├── _platform.py            # Linux 가드
 │   ├── _dir.py                 # $HOME/workspace, $HOME/worktrees 생성
 │   ├── _zsh.py                 # zsh + oh-my-zsh + p10k + 플러그인 + dotfile
-│   ├── _vim.py                 # vim + Vundle + 플러그인 + vimrc
+│   ├── _nvim.py                # nvim + Vundle + coc.nvim + 플러그인 + init.vim
 │   └── _tmux.py                # tmux + TPM + tmux.conf
 └── packages/                   # 정적 설정 자산 (wheel package-data)
     ├── zsh/
@@ -33,7 +33,9 @@ devenv/
     │   ├── aliases.zsh         # → ~/.oh-my-zsh/custom/aliases.zsh
     │   ├── devconfig           # → ~/.devconfig
     │   └── p10k.zsh            # → ~/.p10k.zsh
-    ├── vim/vimrc               # → ~/.vim/vimrc
+    ├── nvim/
+    │   ├── init.vim            # → ~/.config/nvim/init.vim
+    │   └── coc-settings.json   # → ~/.config/nvim/coc-settings.json
     └── tmux/tmux.conf          # → ~/.tmux.conf
 ```
 
@@ -60,7 +62,7 @@ devenv = "devenv.cli:cli"
 - `devenv setup [--home PATH]` — workspace 디렉토리만
 - `devenv list [--installed]` — 도구 목록 + 설치 상태
 - `devenv where` — package-data 경로, 기본 HOME
-- `devenv doctor` — 선행 조건 점검 (Linux 여부, zsh/vim/tmux/git/curl)
+- `devenv doctor` — 선행 조건 점검 (Linux 여부, zsh/nvim/tmux/git/curl)
 - `devenv clean [--dry-run]` — 백업 파일 정리
 
 ## Makefile은 개발자 부트스트랩 전용

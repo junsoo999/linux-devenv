@@ -3,7 +3,7 @@ Copyright 2026 The HyperAccel. All rights reserved.
 -->
 
 <h3 align="center">
-Linux 서버 개발 환경(Z-Shell · Vim · Tmux)을 한 줄로 부트스트랩하는 Click 기반 CLI
+Linux 서버 개발 환경(Z-Shell · Neovim · Tmux)을 한 줄로 부트스트랩하는 Click 기반 CLI
 </h3>
 
 <p align="center">
@@ -16,7 +16,7 @@ Linux 서버 개발 환경(Z-Shell · Vim · Tmux)을 한 줄로 부트스트랩
 
 ## ✨ 주요 특징
 
-- **한 줄 부트스트랩**: `devenv install` 한 번으로 oh-my-zsh + powerlevel10k + Vim/Vundle + Tmux/TPM + 표준 플러그인까지 동시 설치
+- **한 줄 부트스트랩**: `devenv install` 한 번으로 oh-my-zsh + powerlevel10k + Neovim/Vundle/coc.nvim + Tmux/TPM + 표준 플러그인까지 동시 설치 (nvim이 없으면 `~/.local/opt/nvim/`에 공식 stable 릴리스를 자동 설치하고 `~/.local/bin/nvim`을 심볼릭 링크)
 - **멱등성 기본**: 모든 단계가 N번 실행해도 안전하도록 헬퍼 레벨에서 가드 (`git_clone_idempotent`, `deploy_dotfile`)
 - **비파괴 백업**: 기존 dotfile은 `<file>.bak.<UTC-timestamp>`로 자동 백업, `--force`만 백업 생략
 - **Dry-run 지원**: `--dry-run`으로 실제 실행 없이 명령 시퀀스만 확인
@@ -35,11 +35,11 @@ linux-devenv/
 │   │   ├── _platform.py           # Linux 가드
 │   │   ├── _dir.py                # workspace 디렉토리 생성
 │   │   ├── _zsh.py                # zsh + oh-my-zsh + p10k + 플러그인
-│   │   ├── _vim.py                # vim + Vundle + 플러그인
+│   │   ├── _nvim.py               # neovim + Vundle + coc.nvim + 플러그인
 │   │   └── _tmux.py               # tmux + TPM + 플러그인
 │   └── packages/                  # dotfile 자산 (wheel package-data)
 │       ├── zsh/{zshrc,aliases.zsh,devconfig,p10k.zsh}
-│       ├── vim/vimrc
+│       ├── nvim/{init.vim,coc-settings.json}
 │       └── tmux/tmux.conf
 ├── tests/unit_test/               # pytest + CliRunner + fake_home fixture
 ├── scripts/install_packages.sh    # uv sync + pre-commit install 부트스트랩
@@ -69,7 +69,7 @@ make install                       # Python 3.10 (기본)
 make install PYTHON_VERSION=3.12   # 다른 버전 지정
 ```
 
-내부적으로 `scripts/install_packages.sh`를 호출하며, 직접 실행해도 동일합니다. 이 단계는 **개발자용**이고, 실제 zsh/vim/tmux 환경은 다음 단계에서 설치합니다.
+내부적으로 `scripts/install_packages.sh`를 호출하며, 직접 실행해도 동일합니다. 이 단계는 **개발자용**이고, 실제 zsh/nvim/tmux 환경은 다음 단계에서 설치합니다.
 
 ### 3. `devenv` CLI 설치
 
@@ -81,19 +81,19 @@ devenv --help
 ### 4. 실제 환경 설치
 
 ```bash
-devenv doctor                # 선행 조건(Linux + zsh/vim/tmux/git/curl) 점검
-devenv install               # 전체 설치 (dir → zsh → vim → tmux)
+devenv doctor                # 선행 조건(Linux + zsh/nvim/tmux/git/curl) 점검
+devenv install               # 전체 설치 (dir → zsh → nvim → tmux)
 ```
 
 ### 주요 CLI 커맨드
 
 | 커맨드 | 설명 |
 |---|---|
-| `devenv install` | 전체 도구 설치. `--only zsh,tmux`, `--skip vim`, `--force`, `--dry-run`, `--yes`, `--home PATH` 지원 |
+| `devenv install` | 전체 도구 설치. `--only zsh,tmux`, `--skip nvim`, `--force`, `--dry-run`, `--yes`, `--home PATH` 지원 |
 | `devenv setup` | `$HOME/workspace`, `$HOME/worktrees` 디렉토리만 생성 |
 | `devenv list` | 관리되는 도구 + 설치 상태. `--installed`로 설치된 것만 |
 | `devenv where` | 번들된 dotfile 자산 경로와 기본 HOME |
-| `devenv doctor` | 선행 명령(zsh/vim/tmux/git/curl) 및 OS 점검 |
+| `devenv doctor` | 선행 명령(zsh/nvim/tmux/git/curl) 및 OS 점검 |
 | `devenv clean` | `*.bak.<ts>` 백업 파일 정리. `--dry-run` 지원 |
 
 전체 옵션은 `devenv <command> --help`에서 확인할 수 있습니다.
@@ -119,7 +119,7 @@ devenv install               # 전체 설치 (dir → zsh → vim → tmux)
 | `make clean` | 빌드 산출물·캐시 제거 |
 | `make help` | 타깃 목록 표시 |
 
-> **주의**: `make install`은 **개발자용 부트스트랩**이고, 실제 zsh/vim/tmux 설치는 **`devenv install`** 입니다.
+> **주의**: `make install`은 **개발자용 부트스트랩**이고, 실제 zsh/nvim/tmux 설치는 **`devenv install`** 입니다.
 
 ## 🛠 기술 스택
 

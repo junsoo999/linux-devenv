@@ -4,7 +4,7 @@ The CLI surface in :mod:`devenv.cli` is intentionally thin; all
 reusable logic for ensuring directories, idempotent ``git clone``,
 backing up + deploying dotfiles, and shelling out to external
 installers lives here. Per-tool modules (:mod:`devenv.cli._zsh`,
-``_vim``, ``_tmux``) compose these helpers.
+``_nvim``, ``_tmux``) compose these helpers.
 """
 
 from __future__ import annotations
