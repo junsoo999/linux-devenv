@@ -33,7 +33,7 @@ def install(ctx: InstallContext) -> None:
             "-E",
             "-s",
             "-c",
-            f"source {vim_dir / 'vimrc'}",
+            f'execute "source " . fnameescape("{vim_dir / "vimrc"}")',
             "-c",
             "PluginInstall",
             "-c",
