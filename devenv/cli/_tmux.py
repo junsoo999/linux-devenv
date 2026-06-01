@@ -26,17 +26,19 @@ def install(ctx: InstallContext) -> None:
     ensure_dir(tpm_dir.parent, ctx)
     git_clone_idempotent(TPM_REPO, tpm_dir, ctx)
 
-    # TPM's ``install_plugins`` reads ``$TMUX_PLUGIN_MANAGER_PATH`` to
-    # decide where to clone plugins. The variable is normally exported
-    # by ``set-environment`` in ``tmux.conf``, but that only fires from
-    # inside a tmux session — when we invoke the script standalone we
-    # must pass it explicitly or TPM aborts with "FATAL: Tmux Plugin
-    # Manager not configured in tmux.conf".
-    install_plugins = tpm_dir / "bin" / "install_plugins"
+    # TPM resolves the plugin directory via ``tmux show-environment -g
+    # TMUX_PLUGIN_MANAGER_PATH`` — that is, from the tmux *server's*
+    # global environment, not the calling shell. The variable is only
+    # auto-populated from inside a running tmux session (by ``run
+    # '~/.tmux/plugins/tpm/tpm'`` in tmux.conf), so when we invoke
+    # ``install_plugins`` standalone we must seed it ourselves. Without
+    # this TPM aborts with "FATAL: Tmux Plugin Manager not configured
+    # in tmux.conf".
     plugin_path = str(ctx.home / ".tmux" / "plugins") + "/"
     run(
-        [str(install_plugins)],
+        ["tmux", "set-environment", "-g", "TMUX_PLUGIN_MANAGER_PATH", plugin_path],
         ctx,
-        check=False,
-        env={"TMUX_PLUGIN_MANAGER_PATH": plugin_path},
     )
+
+    install_plugins = tpm_dir / "bin" / "install_plugins"
+    run([str(install_plugins)], ctx, check=False)
