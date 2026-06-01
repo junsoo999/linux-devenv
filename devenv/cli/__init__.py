@@ -2,7 +2,7 @@
 
 Provides ``devenv`` subcommands that bootstrap a Linux server dev
 environment (workspace directory, oh-my-zsh + powerlevel10k + zsh
-plugins, vim + Vundle plugins, tmux + TPM plugins) and lay out the
+plugins, nvim + Vundle + coc.nvim, tmux + TPM plugins) and lay out the
 managed dotfiles into the user's home directory.
 
 Each tool installer is idempotent; running ``devenv install`` more than
@@ -18,7 +18,7 @@ from pathlib import Path
 import click
 
 from devenv import __version__
-from devenv.cli import _dir, _tmux, _vim, _zsh
+from devenv.cli import _dir, _nvim, _tmux, _zsh
 from devenv.cli._installer import (
     CommandMissingError,
     InstallContext,
@@ -46,7 +46,7 @@ def _register(name: str, description: str, install_fn) -> None:
 
 _register("dir", "$HOME/workspace, $HOME/worktrees 디렉토리 생성", _dir.install)
 _register("zsh", "Z-Shell + oh-my-zsh + powerlevel10k + 플러그인 + dotfile", _zsh.install)
-_register("vim", "Vim + Vundle + 플러그인 + vimrc", _vim.install)
+_register("nvim", "Neovim + Vundle + coc.nvim + 플러그인 + init.vim", _nvim.install)
 _register("tmux", "Tmux + TPM + 플러그인 + tmux.conf", _tmux.install)
 
 
@@ -85,7 +85,7 @@ def _select_tools(only: str | None, skip: str | None) -> list[_ToolEntry]:
     return selected
 
 
-@click.group(help="Linux 서버용 개발 환경(Z-Shell, Vim, Tmux) 자동 설치 도구.")
+@click.group(help="Linux 서버용 개발 환경(Z-Shell, Neovim, Tmux) 자동 설치 도구.")
 @click.version_option(__version__, prog_name="devenv")
 def cli() -> None:
     """Top-level command group: install / setup / list / where / doctor / clean."""
@@ -167,7 +167,7 @@ def _tool_status(name: str, home: Path) -> str:
     markers = {
         "dir": home / "workspace",
         "zsh": home / ".zshrc",
-        "vim": home / ".vim" / "vimrc",
+        "nvim": home / ".config" / "nvim" / "init.vim",
         "tmux": home / ".tmux.conf",
     }
     marker = markers.get(name)
@@ -184,7 +184,7 @@ def where() -> None:
     click.echo("tools   : " + ", ".join(_TOOL_REGISTRY))
 
 
-@cli.command(help="선행 조건(zsh / vim / tmux / git / curl / Linux 여부)을 점검합니다.")
+@cli.command(help="선행 조건(zsh / nvim / tmux / git / curl / Linux 여부)을 점검합니다.")
 def doctor() -> None:
     """Probe the host for required commands and OS."""
     ok = True
@@ -196,7 +196,7 @@ def doctor() -> None:
 
     import shutil
 
-    for cmd in ("zsh", "vim", "tmux", "git", "curl"):
+    for cmd in ("zsh", "nvim", "tmux", "git", "curl"):
         path = shutil.which(cmd)
         if path:
             click.secho(f"  ✓ {cmd:<5} → {path}", fg="green")

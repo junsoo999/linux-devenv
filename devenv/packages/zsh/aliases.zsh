@@ -2,7 +2,7 @@
 alias ll='ls -alF'
 alias la='ls -A'
 alias l='ls -CF'
-alias vi='vim -X'
+alias vi='nvim'
 alias vc='vi ~/.zshrc'
 alias va='vi ~/.oh-my-zsh/custom/aliases.zsh'
 alias sc='source ~/.zshrc'

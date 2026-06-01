@@ -22,7 +22,7 @@ def test_packages_root_resolves_to_existing_dir() -> None:
     root = packages_root()
     assert root.is_dir()
     assert (root / "zsh" / "zshrc").is_file()
-    assert (root / "vim" / "vimrc").is_file()
+    assert (root / "nvim" / "init.vim").is_file()
     assert (root / "tmux" / "tmux.conf").is_file()
 
 
