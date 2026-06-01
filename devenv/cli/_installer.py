@@ -9,6 +9,7 @@ installers lives here. Per-tool modules (:mod:`devenv.cli._zsh`,
 
 from __future__ import annotations
 
+import contextlib
 import datetime as _dt
 import shutil
 import subprocess
@@ -207,6 +208,8 @@ def deploy_dotfile(src: Path, dest: Path, ctx: InstallContext) -> None:
             _log(f"backed up {dest} → {backup}", color="yellow")
 
     shutil.copy2(src, dest)
+    with contextlib.suppress(OSError):
+        dest.chmod(dest.stat().st_mode | 0o200)
     _log(f"deployed {src.name} → {dest}", color="green")
 
 
