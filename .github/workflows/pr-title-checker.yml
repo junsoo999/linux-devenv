@@ -1,0 +1,79 @@
+name: pr-title-checker
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize]
+
+jobs:
+  check-pr-title:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check PR Title
+        uses: actions/github-script@v8
+        with:
+          script: |
+            const title = context.payload.pull_request.title;
+            const tagGroup = '(FEAT|FIX|DOCS|STYLE|REFACTOR|PERF|TEST|BUILD|CI|CHORE|REVERT|HOTFIX|BOT)';
+            const pattern = new RegExp('^\\[' + tagGroup + '\\] [A-Za-z0-9 _\\-\\.&\\*,\\[\\]:\\/`<>=#\\+]{1,150}$');
+
+            // Skip validation for WIP PRs
+            if (title.startsWith('WIP:')) {
+              console.log('Skipping validation for WIP PR');
+              return;
+            }
+
+            if (!pattern.test(title)) {
+              // Find where the mismatch happened
+              let mismatchInfo = '';
+              const startRe = new RegExp('^\\[' + tagGroup + '\\]');
+              const startSpaceRe = new RegExp('^\\[' + tagGroup + '\\] ');
+              if (!startRe.test(title)) {
+                mismatchInfo += '- The title does not start with one of [FEAT], [FIX], [DOCS], [STYLE], [REFACTOR], [PERF], [TEST], [BUILD], [CI], [CHORE], [REVERT], [HOTFIX], [BOT].\n';
+              }
+              if (!startSpaceRe.test(title)) {
+                mismatchInfo += '- There is no space after the starting tag.\n';
+              }
+              // Check allowed characters and length (after removing the tag)
+              const body = title.replace(startSpaceRe, '');
+              if (!/^[A-Za-z0-9 _\-\.&\*,\[\]:\/`<>=#\+]{1,150}$/.test(body)) {
+                mismatchInfo += '- The title body must be 1-150 characters and only contain English letters, numbers, and allowed special characters (_-.,&*[]:/`<>=#+).\n';
+              }
+
+              const errorMessage = `
+                ❌ PR title validation failed!
+
+                PR title must follow the format:
+                - [FEAT]: New feature
+                - [FIX]: Bug fix
+                - [DOCS]: Documentation only changes
+                - [STYLE]: Code style changes (formatting, semicolons, etc.)
+                - [REFACTOR]: Code refactoring without behavior change
+                - [PERF]: Performance improvement
+                - [TEST]: Add or correct tests
+                - [BUILD]: Build system or external dependency changes
+                - [CI]: CI configuration or script changes
+                - [CHORE]: Other changes that don't modify src or test files
+                - [REVERT]: Revert a previous commit
+                - [HOTFIX]: Urgent bug fix
+                - [BOT]: Automated task
+
+                The title must be written in English.
+
+                Examples:
+                - "[FEAT] Add xsim-bench skill"
+                - "[FIX] Correct SKILL.md frontmatter parsing"
+                - "[DOCS] Update contribution guide"
+                - "[HOTFIX] Fix critical CLI install failure"
+                - "[BOT] Automated uv.lock update"
+
+                Current title: "${title}"
+
+                Mismatch details:
+                ${mismatchInfo || '- Unknown format error'}
+              `;
+
+              core.setFailed(errorMessage);
+            } else {
+              console.log('✅ PR title validation passed');
+            }

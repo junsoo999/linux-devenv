@@ -1,0 +1,63 @@
+name: release-package
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+
+jobs:
+  create-tag-and-release:
+    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      discussions: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.10"
+
+      - name: Set up environment variables
+        run: |
+          echo "TAG=${GITHUB_HEAD_REF#release/}" >> "$GITHUB_ENV"
+
+      - name: Verify pyproject.toml version matches tag
+        run: |
+          PROJECT_VERSION="v$(grep -E '^version = ' pyproject.toml | head -n 1 | sed -E 's/version = "(.*)"/\1/')"
+          if [ "$PROJECT_VERSION" != "${{ env.TAG }}" ]; then
+            echo "::error::pyproject.toml version ($PROJECT_VERSION) does not match release tag (${{ env.TAG }})"
+            exit 1
+          fi
+
+      - name: Create release tag
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          if git ls-remote --exit-code --tags origin "refs/tags/${TAG}" >/dev/null 2>&1; then
+            echo "Tag ${TAG} already exists on origin; skipping creation for retry-friendly reruns."
+          else
+            git tag "${TAG}"
+            git push origin "${TAG}"
+          fi
+
+      - name: Build package
+        run: uv build
+
+      - name: Publish Github release
+        if: ${{ !contains(env.TAG, 'dev') }}
+        uses: softprops/action-gh-release@v3
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.TAG }}
+          generate_release_notes: true
+          prerelease: ${{ contains(env.TAG, 'rc') || contains(env.TAG, 'a') || contains(env.TAG, 'b') }}
+          files: |
+            dist/*.whl

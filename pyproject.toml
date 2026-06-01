@@ -1,0 +1,122 @@
+[project]
+name = "linux-devenv"
+description = "Linux 서버용 개발 환경(Z-Shell, Vim, Tmux)을 한 번에 설치하는 Click 기반 CLI"
+readme = "README.md"
+authors = [
+    { name = "Junsoo Kim", email = "js.kim@hyperaccel.ai" },
+]
+requires-python = ">=3.10"
+dependencies = [
+    "click>=8.1.0,<9.0.0",
+]
+version = "0.0.1"
+
+[project.scripts]
+devenv = "devenv.cli:cli"
+
+[build-system]
+requires = [
+    "setuptools>=80.9.0,<=82.0.0",
+    "wheel>=0.45.0,<=0.46.3",
+]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["devenv*"]
+
+[tool.setuptools.package-data]
+devenv = [
+    "packages/zsh/*",
+    "packages/vim/*",
+    "packages/tmux/*",
+]
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.5.0,<=4.5.1",
+    "pytest>=9.0.0,<=9.0.2",
+    "pytest-xdist>=3.8.0,<=3.8.0",
+    "ruff>=0.14.0,<=0.15.4",
+    "ty>=0.0.0,<=0.0.13",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[[tool.uv.index]]
+name = "pypi"
+url = "https://pypi.org/simple"
+default = true
+
+[tool.ruff]
+exclude = [
+    ".git",
+    ".env",
+    ".venv",
+    ".pytest_cache",
+    ".ruff_cache",
+    "__pycache__",
+    "build",
+    "dist",
+    "devenv/packages",
+]
+
+line-length = 119
+indent-width = 4
+target-version = "py310"
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.ruff.lint]
+select = [
+    "E", "F", "W", "I", "N", "D", "B", "C4",
+    "DTZ", "T20", "RET", "SIM", "ERA",
+]
+ignore = [
+    "E501",
+    "D203",
+    "D213",
+    "D104",
+    "RET504",
+    "SIM108",
+]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/**/*.py" = ["D"]
+
+[tool.ruff.lint.pydocstyle]
+convention = "google"
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+
+[tool.ty.environment]
+python-version = "3.10"
+
+[tool.ty.src]
+include = ["devenv"]
+
+[tool.ty.rules]
+unresolved-import = "ignore"
+unused-ignore-comment = "ignore"
+
+[tool.pytest.ini_options]
+log_level = "INFO"
+addopts = [
+    "--strict-markers",
+    "--tb=short",
+    "-ra",
+    "-vv",
+    "--color=yes",
+]
+testpaths = ["tests/unit_test"]
+python_files = ["test_*.py", "*_test.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]

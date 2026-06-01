@@ -1,0 +1,19 @@
+name: pull-request-stats
+
+on:
+  pull_request:
+    types: [opened]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  stats:
+    runs-on: ubuntu-latest
+    # The flowwer-dev action throws on PRs with no reviewers/contributors yet.
+    # The stats comment is a nice-to-have, so do not block the PR on it.
+    continue-on-error: true
+    steps:
+      - name: Run pull request stats
+        uses: flowwer-dev/pull-request-stats@v3.3.0
