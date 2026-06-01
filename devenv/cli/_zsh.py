@@ -56,7 +56,11 @@ def _install_oh_my_zsh(ctx: InstallContext) -> None:
     oh_my_zsh_dir = ctx.home / ".oh-my-zsh"
     if oh_my_zsh_dir.exists():
         return
-    command = f'RUNZSH=no CHSH=no KEEP_ZSHRC=yes HOME="{ctx.home}" sh -c "$(curl -fsSL {OH_MY_ZSH_INSTALL_URL})"'
+    command = (
+        f"set -e -o pipefail; "
+        f"curl -fsSL {OH_MY_ZSH_INSTALL_URL} | "
+        f'RUNZSH=no CHSH=no KEEP_ZSHRC=yes HOME="{ctx.home}" sh'
+    )
     run_shell(command, ctx)
 
 
