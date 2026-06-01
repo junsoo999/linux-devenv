@@ -16,7 +16,7 @@ Linux 서버 개발 환경(Z-Shell · Neovim · Tmux)을 한 줄로 부트스트
 
 ## ✨ 주요 특징
 
-- **한 줄 부트스트랩**: `devenv install` 한 번으로 oh-my-zsh + powerlevel10k + Neovim/Vundle/coc.nvim + Tmux/TPM + 표준 플러그인까지 동시 설치
+- **한 줄 부트스트랩**: `devenv install` 한 번으로 oh-my-zsh + powerlevel10k + Neovim/Vundle/coc.nvim + Tmux/TPM + 표준 플러그인까지 동시 설치 (nvim이 없으면 `~/.local/opt/nvim/`에 공식 stable 릴리스를 자동 설치하고 `~/.local/bin/nvim`을 심볼릭 링크)
 - **멱등성 기본**: 모든 단계가 N번 실행해도 안전하도록 헬퍼 레벨에서 가드 (`git_clone_idempotent`, `deploy_dotfile`)
 - **비파괴 백업**: 기존 dotfile은 `<file>.bak.<UTC-timestamp>`로 자동 백업, `--force`만 백업 생략
 - **Dry-run 지원**: `--dry-run`으로 실제 실행 없이 명령 시퀀스만 확인

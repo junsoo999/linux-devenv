@@ -2,9 +2,12 @@
 
 Lays out the team's Neovim environment on a Linux server:
 
-* Clones Vundle into ``~/.vim/bundle/Vundle.vim`` (the bundled ``init.vim``
-  still drives plugins through Vundle, sharing the bundle directory with
-  any legacy vim install).
+* If ``nvim`` is missing from PATH, downloads the official prebuilt
+  release tarball into ``~/.local/opt/nvim/`` and symlinks the binary
+  to ``~/.local/bin/nvim``.
+* Clones Vundle into ``~/.vim/bundle/Vundle.vim`` (the bundled
+  ``init.vim`` still drives plugins through Vundle, sharing the bundle
+  directory with any legacy vim install).
 * Deploys ``init.vim`` and ``coc-settings.json`` into ``~/.config/nvim/``.
 * Installs ``coc.nvim`` as a native neovim pack under
   ``~/.local/share/nvim/site/pack/coc/start/coc.nvim`` (release branch).
@@ -15,9 +18,14 @@ Lays out the team's Neovim environment on a Linux server:
 
 from __future__ import annotations
 
+import platform
+import shutil
+from pathlib import Path
+
 from devenv.cli._installer import (
     InstallContext,
     InstallError,
+    _log,
     deploy_dotfile,
     ensure_command,
     ensure_dir,
@@ -31,11 +39,16 @@ COC_REPO = "https://github.com/neoclide/coc.nvim.git"
 COC_BRANCH = "release"
 COC_EXTENSIONS = ("coc-pyright", "coc-clangd")
 
+# Use the ``stable`` release tag so we follow whatever Neovim's current
+# stable build is without pinning to a single point version.
+NVIM_RELEASE_TAG = "stable"
+NVIM_RELEASE_BASE = "https://github.com/neovim/neovim/releases/download"
+
 
 def install(ctx: InstallContext) -> None:
-    """Deploy nvim dotfiles, Vundle, coc.nvim, and coc extensions."""
-    ensure_command("nvim")
+    """Deploy nvim binary (if needed), dotfiles, Vundle, coc.nvim, and coc extensions."""
     ensure_command("git")
+    nvim_bin = _ensure_nvim_binary(ctx)
 
     nvim_config = ctx.home / ".config" / "nvim"
     ensure_dir(nvim_config, ctx)
@@ -56,7 +69,7 @@ def install(ctx: InstallContext) -> None:
     init_vim = nvim_config / "init.vim"
     run(
         [
-            "nvim",
+            nvim_bin,
             "--headless",
             "-u",
             str(init_vim),
@@ -69,13 +82,95 @@ def install(ctx: InstallContext) -> None:
         check=False,
     )
 
-    _install_coc_extensions(init_vim, ctx)
+    _install_coc_extensions(nvim_bin, init_vim, ctx)
 
 
-def _git_clone_branch(url: str, dest, branch: str, ctx: InstallContext) -> None:
+def _ensure_nvim_binary(ctx: InstallContext) -> str:
+    """Ensure ``nvim`` is available; install to ``~/.local`` when missing.
+
+    Returns the absolute path to the ``nvim`` binary that subsequent
+    commands should invoke. When ``nvim`` was already on ``PATH`` this
+    is whatever ``shutil.which`` returned; otherwise it is the symlink
+    deployed under ``~/.local/bin/nvim``.
+    """
+    found = shutil.which("nvim")
+    if found:
+        _log(f"nvim already present: {found}")
+        return found
+
+    asset = _nvim_release_asset()
+    if asset is None:
+        raise InstallError(
+            "no Neovim prebuilt release for this CPU architecture"
+            f" ({platform.machine()}); install nvim manually and rerun.",
+        )
+
+    ensure_command("curl")
+    ensure_command("tar")
+
+    local_root = ctx.home / ".local"
+    opt_dir = local_root / "opt" / "nvim"
+    bin_dir = local_root / "bin"
+    ensure_dir(opt_dir.parent, ctx)
+    ensure_dir(bin_dir, ctx)
+
+    url = f"{NVIM_RELEASE_BASE}/{NVIM_RELEASE_TAG}/{asset}"
+    tarball = opt_dir.parent / asset
+
+    if not opt_dir.exists():
+        run(["curl", "-fsSL", "-o", str(tarball), url], ctx)
+        # Extract under a temp name first, then move into opt/nvim so
+        # the final layout is independent of the tarball's top-level dir.
+        staging = opt_dir.parent / f"nvim-staging-{NVIM_RELEASE_TAG}"
+        if ctx.dry_run:
+            _log(f"[dry-run] mkdir -p {staging}")
+            _log(f"[dry-run] tar -xzf {tarball} -C {staging} --strip-components=1")
+            _log(f"[dry-run] mv {staging} {opt_dir}")
+            _log(f"[dry-run] rm {tarball}")
+        else:
+            if staging.exists():
+                shutil.rmtree(staging)
+            staging.mkdir(parents=True)
+            run(
+                ["tar", "-xzf", str(tarball), "-C", str(staging), "--strip-components=1"],
+                ctx,
+            )
+            staging.rename(opt_dir)
+            tarball.unlink(missing_ok=True)
+    else:
+        _log(f"already present: {opt_dir} (skip download)")
+
+    nvim_target = opt_dir / "bin" / "nvim"
+    nvim_link = bin_dir / "nvim"
+    if ctx.dry_run:
+        _log(f"[dry-run] ln -sf {nvim_target} {nvim_link}")
+        return str(nvim_link)
+
+    if nvim_link.is_symlink() or nvim_link.exists():
+        nvim_link.unlink()
+    nvim_link.symlink_to(nvim_target)
+    _log(f"linked {nvim_link} → {nvim_target}", color="green")
+
+    if not shutil.which("nvim"):
+        _log(
+            f'{bin_dir} is not on your PATH yet — add `export PATH="{bin_dir}:$PATH"` to your shell rc.',
+            color="yellow",
+        )
+    return str(nvim_link)
+
+
+def _nvim_release_asset() -> str | None:
+    """Map the current CPU architecture to a Neovim release asset name."""
+    machine = platform.machine().lower()
+    if machine in ("x86_64", "amd64"):
+        return "nvim-linux-x86_64.tar.gz"
+    if machine in ("aarch64", "arm64"):
+        return "nvim-linux-arm64.tar.gz"
+    return None
+
+
+def _git_clone_branch(url: str, dest: Path, branch: str, ctx: InstallContext) -> None:
     """Idempotently clone ``url`` at ``branch`` into ``dest``."""
-    from devenv.cli._installer import _log  # noqa: PLC0415 — internal helper.
-
     if dest.exists():
         _log(f"already present: {dest} (skip clone)")
         return
@@ -86,10 +181,8 @@ def _git_clone_branch(url: str, dest, branch: str, ctx: InstallContext) -> None:
     )
 
 
-def _install_coc_extensions(init_vim, ctx: InstallContext) -> None:
+def _install_coc_extensions(nvim_bin: str, init_vim: Path, ctx: InstallContext) -> None:
     """Run ``:CocInstall`` headlessly for the team's coc extension set."""
-    from devenv.cli._installer import _log  # noqa: PLC0415 — internal helper.
-
     try:
         ensure_command("node")
     except InstallError:
@@ -103,7 +196,7 @@ def _install_coc_extensions(init_vim, ctx: InstallContext) -> None:
     coc_cmd = f":CocInstall -sync {' '.join(COC_EXTENSIONS)}|qa"
     run(
         [
-            "nvim",
+            nvim_bin,
             "--headless",
             "-u",
             str(init_vim),

@@ -184,7 +184,7 @@ def where() -> None:
     click.echo("tools   : " + ", ".join(_TOOL_REGISTRY))
 
 
-@cli.command(help="선행 조건(zsh / nvim / tmux / git / curl / Linux 여부)을 점검합니다.")
+@cli.command(help="선행 조건(zsh / tmux / git / curl / tar + nvim/node 선택)을 점검합니다.")
 def doctor() -> None:
     """Probe the host for required commands and OS."""
     ok = True
@@ -196,13 +196,26 @@ def doctor() -> None:
 
     import shutil
 
-    for cmd in ("zsh", "nvim", "tmux", "git", "curl"):
+    # ``nvim`` is bootstrapped by `devenv install` itself when missing,
+    # so report it as informational rather than a hard failure.
+    required = ("zsh", "tmux", "git", "curl", "tar")
+    optional = ("nvim", "node")
+    for cmd in required:
         path = shutil.which(cmd)
         if path:
             click.secho(f"  ✓ {cmd:<5} → {path}", fg="green")
         else:
             click.secho(f"  ✗ {cmd:<5} 누락", fg="red")
             ok = False
+    for cmd in optional:
+        path = shutil.which(cmd)
+        if path:
+            click.secho(f"  ✓ {cmd:<5} → {path}", fg="green")
+        else:
+            click.secho(
+                f"  ! {cmd:<5} 누락 (install 시 자동 설치 / 일부 단계 skip)",
+                fg="yellow",
+            )
     sys.exit(0 if ok else 1)
 
 
