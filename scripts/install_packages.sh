@@ -59,15 +59,10 @@ if ! command -v uv &> /dev/null; then
     exit 1
 fi
 
-echo "[INFO] uv sync (python ${PYTHON_VERSION})"
 uv sync --python "${PYTHON_VERSION}"
 
-echo "[INFO] uv pip install -e . (editable install for devenv CLI)"
 uv pip install -e .
 
-echo "[INFO] pre-commit install"
 uv run pre-commit install
 
 popd >/dev/null || exit 1
-
-echo "[INFO] done. Try: uv run devenv --help"
