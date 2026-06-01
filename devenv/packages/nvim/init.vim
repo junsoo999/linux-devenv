@@ -101,7 +101,7 @@ let g:gitgutter_max_signs = 500
 " OSC52: yank → local system clipboard (over SSH)
 let s:VimOSCYankPostRegisters = ['', '+', '*']
 function! s:VimOSCYankPostCallback(event)
-    if a:event.operator == 'y' && index(s:VimOSCYankPostRegisters, a:event.regname) != -1
+    if exists('*OSCYankRegister') && a:event.operator == 'y' && index(s:VimOSCYankPostRegisters, a:event.regname) != -1
         call OSCYankRegister(a:event.regname)
     endif
 endfunction
