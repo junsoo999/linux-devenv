@@ -12,6 +12,7 @@ from pathlib import Path
 
 from devenv.cli._installer import (
     InstallContext,
+    _log,
     confirm,
     deploy_dotfile,
     ensure_command,
@@ -21,6 +22,7 @@ from devenv.cli._installer import (
     run,
     run_shell,
 )
+from devenv.cli._platform import is_macos
 
 OH_MY_ZSH_INSTALL_URL = "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 POWERLEVEL10K_REPO = "https://github.com/romkatv/powerlevel10k.git"
@@ -80,11 +82,12 @@ def _install_optional_dependencies(ctx: InstallContext) -> None:
     """Install fzf / thefuck / autojump if missing.
 
     fzf is installed via its official ``install`` script under
-    ``$HOME/.fzf``. thefuck is tried via pip first, then queued for apt.
-    autojump is queued for apt. Apt installs require sudo and are
-    confirmed once with the user.
+    ``$HOME/.fzf``. thefuck is tried via pip first, then falls back to
+    the system package manager (apt on Linux, brew on macOS). autojump
+    is queued for the same package manager. Apt installs require sudo
+    and are confirmed once with the user; brew installs do not.
     """
-    apt_packages: list[str] = []
+    pending_packages: list[str] = []
 
     if shutil.which("fzf") is None:
         fzf_dir = ctx.home / ".fzf"
@@ -103,25 +106,38 @@ def _install_optional_dependencies(ctx: InstallContext) -> None:
                 installed = True
                 break
         if not installed:
-            apt_packages.append("thefuck")
+            pending_packages.append("thefuck")
 
     if shutil.which("autojump") is None:
-        apt_packages.append("autojump")
+        pending_packages.append("autojump")
 
-    if not apt_packages:
+    if not pending_packages:
         return
+
+    if is_macos():
+        brew = shutil.which("brew")
+        if brew is None:
+            _log(
+                f"brew not found — skipping {', '.join(pending_packages)}."
+                " Install Homebrew (https://brew.sh) and rerun, or install manually.",
+                color="yellow",
+            )
+            return
+        run([brew, "install", *pending_packages], ctx, check=False)
+        return
+
     apt = shutil.which("apt-get") or shutil.which("apt")
     if apt is None:
         return
-    prompt = f"일부 패키지({', '.join(apt_packages)}) 설치에 sudo가 필요합니다. 계속할까요?"
+    prompt = f"일부 패키지({', '.join(pending_packages)}) 설치에 sudo가 필요합니다. 계속할까요?"
     if not confirm(prompt, ctx):
         return
     if apt.endswith("apt-get"):
         run(["sudo", "apt-get", "update"], ctx, check=False)
-        run(["sudo", "apt-get", "install", "-y", *apt_packages], ctx, check=False)
+        run(["sudo", "apt-get", "install", "-y", *pending_packages], ctx, check=False)
     else:
         run(["sudo", "apt", "update"], ctx, check=False)
-        run(["sudo", "apt", "install", "-y", *apt_packages], ctx, check=False)
+        run(["sudo", "apt", "install", "-y", *pending_packages], ctx, check=False)
 
 
 def _deploy_dotfiles(ctx: InstallContext) -> None:

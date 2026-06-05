@@ -137,6 +137,10 @@ def _ensure_nvim_binary(ctx: InstallContext) -> str:
             )
             staging.rename(opt_dir)
             tarball.unlink(missing_ok=True)
+            # macOS quarantines binaries downloaded via curl; strip the
+            # attribute so the nvim binary is not blocked by Gatekeeper.
+            if platform.system() == "Darwin" and shutil.which("xattr"):
+                run(["xattr", "-dr", "com.apple.quarantine", str(opt_dir)], ctx, check=False)
     else:
         _log(f"already present: {opt_dir} (skip download)")
 
@@ -160,8 +164,15 @@ def _ensure_nvim_binary(ctx: InstallContext) -> str:
 
 
 def _nvim_release_asset() -> str | None:
-    """Map the current CPU architecture to a Neovim release asset name."""
+    """Map the current OS + CPU architecture to a Neovim release asset name."""
     machine = platform.machine().lower()
+    system = platform.system()
+    if system == "Darwin":
+        if machine in ("x86_64", "amd64"):
+            return "nvim-macos-x86_64.tar.gz"
+        if machine in ("aarch64", "arm64"):
+            return "nvim-macos-arm64.tar.gz"
+        return None
     if machine in ("x86_64", "amd64"):
         return "nvim-linux-x86_64.tar.gz"
     if machine in ("aarch64", "arm64"):
