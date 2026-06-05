@@ -12,7 +12,7 @@
 - **CLI 프레임워크**: [Click](https://click.palletsprojects.com/) 8.x
 - **패키지 관리**: [uv](https://github.com/astral-sh/uv)
 - **품질 검증**: pre-commit, ruff, ty, bashate, markdownlint
-- **대상 OS**: Linux 서버 (macOS는 `ensure_linux()`가 차단)
+- **대상 OS**: Linux 서버 + macOS 워크스테이션 (그 외는 `ensure_supported()`가 차단)
 
 초기 셋업:
 
@@ -35,7 +35,7 @@ devenv/
 ├── cli/                    # 실행 로직 (Python + Click)
 │   ├── __init__.py         # Click group, _TOOL_REGISTRY 등록
 │   ├── _installer.py       # 공통 헬퍼 (직접 작성한 로직보다 우선 사용)
-│   ├── _platform.py        # Linux 가드
+│   ├── _platform.py        # OS 가드 (Linux / macOS)
 │   └── _<tool>.py          # 도구별 installer (install(ctx) 진입점)
 └── packages/               # 정적 dotfile 자산 (wheel package-data)
     └── <tool>/             # → ~/.<dotfile> 또는 ~/.<tool>/... 로 배치
