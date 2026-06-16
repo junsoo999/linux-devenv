@@ -33,6 +33,7 @@ from devenv.cli._installer import (
     package_file,
     run,
 )
+from devenv.cli._platform import is_macos
 
 VUNDLE_REPO = "https://github.com/VundleVim/Vundle.vim.git"
 COC_REPO = "https://github.com/neoclide/coc.nvim.git"
@@ -122,11 +123,14 @@ def _ensure_nvim_binary(ctx: InstallContext) -> str:
         # Extract under a temp name first, then move into opt/nvim so
         # the final layout is independent of the tarball's top-level dir.
         staging = opt_dir.parent / f"nvim-staging-{NVIM_RELEASE_TAG}"
+        nvim_bin_after_extract = opt_dir / "bin" / "nvim"
         if ctx.dry_run:
             _log(f"[dry-run] mkdir -p {staging}")
             _log(f"[dry-run] tar -xzf {tarball} -C {staging} --strip-components=1")
             _log(f"[dry-run] mv {staging} {opt_dir}")
             _log(f"[dry-run] rm {tarball}")
+            if is_macos() and shutil.which("xattr"):
+                _log(f"[dry-run] xattr -d com.apple.quarantine {nvim_bin_after_extract}")
         else:
             if staging.exists():
                 shutil.rmtree(staging)
@@ -139,8 +143,15 @@ def _ensure_nvim_binary(ctx: InstallContext) -> str:
             tarball.unlink(missing_ok=True)
             # macOS quarantines binaries downloaded via curl; strip the
             # attribute so the nvim binary is not blocked by Gatekeeper.
-            if platform.system() == "Darwin" and shutil.which("xattr"):
-                run(["xattr", "-dr", "com.apple.quarantine", str(opt_dir)], ctx, check=False)
+            # Target the binary only — running -dr over opt_dir would
+            # spam "No such xattr" errors on the hundreds of runtime
+            # files that were never quarantined.
+            if is_macos() and shutil.which("xattr"):
+                run(
+                    ["xattr", "-d", "com.apple.quarantine", str(nvim_bin_after_extract)],
+                    ctx,
+                    check=False,
+                )
     else:
         _log(f"already present: {opt_dir} (skip download)")
 
@@ -166,8 +177,7 @@ def _ensure_nvim_binary(ctx: InstallContext) -> str:
 def _nvim_release_asset() -> str | None:
     """Map the current OS + CPU architecture to a Neovim release asset name."""
     machine = platform.machine().lower()
-    system = platform.system()
-    if system == "Darwin":
+    if is_macos():
         if machine in ("x86_64", "amd64"):
             return "nvim-macos-x86_64.tar.gz"
         if machine in ("aarch64", "arm64"):
