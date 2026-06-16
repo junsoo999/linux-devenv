@@ -97,16 +97,23 @@ def _install_optional_dependencies(ctx: InstallContext) -> None:
             run([str(installer), "--all"], ctx, check=False)
 
     if shutil.which("thefuck") is None:
-        installed = False
-        for pip in ("pip3", "pip"):
-            if shutil.which(pip) is None:
-                continue
-            result = run([pip, "install", "--user", "thefuck"], ctx, check=False)
-            if result is None or result.returncode == 0:
-                installed = True
-                break
-        if not installed:
+        # On macOS the pip --user prefix (``~/Library/Python/3.x/bin``)
+        # is not on PATH by default, so a successful pip install would
+        # still leave ``shutil.which("thefuck")`` returning None and
+        # trigger reinstall on every run. Route macOS straight to brew.
+        if is_macos():
             pending_packages.append("thefuck")
+        else:
+            installed = False
+            for pip in ("pip3", "pip"):
+                if shutil.which(pip) is None:
+                    continue
+                result = run([pip, "install", "--user", "thefuck"], ctx, check=False)
+                if result is None or result.returncode == 0:
+                    installed = True
+                    break
+            if not installed:
+                pending_packages.append("thefuck")
 
     if shutil.which("autojump") is None:
         pending_packages.append("autojump")
