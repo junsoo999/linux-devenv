@@ -25,7 +25,7 @@ from devenv.cli._installer import (
     InstallError,
     packages_root,
 )
-from devenv.cli._platform import ensure_linux, is_linux
+from devenv.cli._platform import ensure_supported, is_supported
 
 # Order matters: workspace dir → shell → editor → multiplexer.
 _TOOL_REGISTRY: dict[str, "_ToolEntry"] = {}
@@ -85,7 +85,7 @@ def _select_tools(only: str | None, skip: str | None) -> list[_ToolEntry]:
     return selected
 
 
-@click.group(help="Linux 서버용 개발 환경(Z-Shell, Neovim, Tmux) 자동 설치 도구.")
+@click.group(help="Linux / macOS 개발 환경(Z-Shell, Neovim, Tmux) 자동 설치 도구.")
 @click.version_option(__version__, prog_name="devenv")
 def cli() -> None:
     """Top-level command group: install / setup / list / where / doctor / clean."""
@@ -108,7 +108,7 @@ def install(
 ) -> None:
     """Install one or more managed tools into the target HOME."""
     if not dry_run:
-        ensure_linux()
+        ensure_supported()
     tools = _select_tools(only, skip)
     ctx = InstallContext(
         home=_resolve_home(home),
@@ -187,11 +187,16 @@ def where() -> None:
 @cli.command(help="선행 조건(zsh / tmux / git / curl / tar + nvim/node 선택)을 점검합니다.")
 def doctor() -> None:
     """Probe the host for required commands and OS."""
+    import platform as _platform
+
     ok = True
-    if is_linux():
-        click.secho("  ✓ Linux", fg="green")
+    if is_supported():
+        click.secho(f"  ✓ {_platform.system()}", fg="green")
     else:
-        click.secho("  ✗ non-Linux: `devenv install` is blocked", fg="red")
+        click.secho(
+            f"  ✗ unsupported OS ({_platform.system()}): `devenv install` is blocked",
+            fg="red",
+        )
         ok = False
 
     import shutil

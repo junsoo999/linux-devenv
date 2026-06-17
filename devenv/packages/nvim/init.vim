@@ -114,8 +114,8 @@ augroup END
 "" Key Mappings
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-nnoremap <C-B>        <Esc>:NERDTreeToggle<CR>
-inoremap <C-B>        <Esc>:NERDTreeToggle<CR>
+nnoremap <C-N>        <Esc>:NERDTreeToggle<CR>
+inoremap <C-N>        <Esc>:NERDTreeToggle<CR>
 nnoremap <C-F>        <ESC>:NERDTreeFocus<CR>
 inoremap <C-F>        <ESC>:NERDTreeFocus<CR>
 nnoremap <C-L>        <ESC>:bnext!<CR>

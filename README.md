@@ -3,7 +3,7 @@ Copyright 2026 The HyperAccel. All rights reserved.
 -->
 
 <h3 align="center">
-Linux 서버 개발 환경(Z-Shell · Neovim · Tmux)을 한 줄로 부트스트랩하는 Click 기반 CLI
+Linux / macOS 개발 환경(Z-Shell · Neovim · Tmux)을 한 줄로 부트스트랩하는 Click 기반 CLI
 </h3>
 
 <p align="center">
@@ -12,7 +12,7 @@ Linux 서버 개발 환경(Z-Shell · Neovim · Tmux)을 한 줄로 부트스트
 
 ---
 
-`linux-devenv`은 HyperAccel Simulator 팀이 새 Linux 서버를 받았을 때 **팀 공통의 셸·에디터·멀티플렉서 환경을 한 번에 재현**하기 위한 도구입니다. 설치 로직은 모두 **Click 기반 Python CLI (`devenv`)** 로 작성되어 있고, 사용자 dotfile은 패키지에 번들된 정적 자산(`devenv/packages/`)으로 관리됩니다.
+`linux-devenv`은 HyperAccel Simulator 팀이 새 Linux 서버나 macOS 워크스테이션을 셋업할 때 **팀 공통의 셸·에디터·멀티플렉서 환경을 한 번에 재현**하기 위한 도구입니다. 설치 로직은 모두 **Click 기반 Python CLI (`devenv`)** 로 작성되어 있고, 사용자 dotfile은 패키지에 번들된 정적 자산(`devenv/packages/`)으로 관리됩니다.
 
 ## ✨ 주요 특징
 
@@ -32,7 +32,7 @@ linux-devenv/
 │   ├── cli/                       # Click CLI 구현
 │   │   ├── __init__.py            # Click group + _TOOL_REGISTRY
 │   │   ├── _installer.py          # InstallContext + 공통 헬퍼
-│   │   ├── _platform.py           # Linux 가드
+│   │   ├── _platform.py           # OS 가드 (Linux / macOS)
 │   │   ├── _dir.py                # workspace 디렉토리 생성
 │   │   ├── _zsh.py                # zsh + oh-my-zsh + p10k + 플러그인
 │   │   ├── _nvim.py               # neovim + Vundle + coc.nvim + 플러그인
@@ -81,7 +81,7 @@ devenv --help
 ### 4. 실제 환경 설치
 
 ```bash
-devenv doctor                # 선행 조건(Linux + zsh/nvim/tmux/git/curl) 점검
+devenv doctor                # 선행 조건(Linux/macOS + zsh/nvim/tmux/git/curl) 점검
 devenv install               # 전체 설치 (dir → zsh → nvim → tmux)
 ```
 

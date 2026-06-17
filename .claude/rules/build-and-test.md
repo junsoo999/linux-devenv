@@ -11,7 +11,7 @@ alwaysApply: false
 
 # Build and test guide
 
-`linux-devenv`은 **uv-managed Python 패키지 + Click CLI + dotfile 자산**이다. "빌드"는 `uv pip install -e .`, "테스트"는 pytest + 깨끗한 Linux 컨테이너에서의 `devenv install` 스모크.
+`linux-devenv`은 **uv-managed Python 패키지 + Click CLI + dotfile 자산**이다. "빌드"는 `uv pip install -e .`, "테스트"는 pytest + 깨끗한 Linux 컨테이너 또는 macOS 호스트에서의 `devenv install` 스모크.
 
 ## Stack
 
@@ -22,7 +22,7 @@ alwaysApply: false
 - **Type checker**: ty (Astral)
 - **Tests**: pytest (`tests/unit_test/`, `CliRunner` + `fake_home` fixture)
 - **Pre-commit**: ruff, ty, bashate, markdownlint
-- **대상 OS**: Linux. macOS는 `ensure_linux()`가 차단.
+- **대상 OS**: Linux + macOS (Darwin). 그 외는 `ensure_supported()`가 차단.
 
 ## uv environment rules (required)
 
@@ -92,7 +92,7 @@ devenv clean [--dry-run] [--home PATH]
 
 - `--home PATH` — 테스트 / 격리 환경용. 기본은 `Path.home()`.
 - `--dry-run` — 어떤 명령이 실행될지만 출력 (서브프로세스 / FS 변경 없음). 새 기능 추가 시 반드시 dry-run에서도 동작하도록 헬퍼 사용.
-- exit code: `0` 성공, `1` 사용자 / 환경 문제 (Linux 아님, 명령 누락, 옵션 충돌), `2` 시스템 / 설치 실패.
+- exit code: `0` 성공, `1` 사용자 / 환경 문제 (지원 안 되는 OS, 명령 누락, 옵션 충돌), `2` 시스템 / 설치 실패.
 
 ## 검증 / 스모크 테스트
 
@@ -151,7 +151,7 @@ uv run --no-sync pre-commit run --all-files
 
 | Symptom | Cause / fix |
 |---|---|
-| `devenv install`이 "must be run on Linux" | macOS/WSL. Linux 컨테이너 또는 Linux 서버에서 실행. |
+| `devenv install`이 "requires Linux or macOS" | Windows/WSL 등 비지원 OS. Linux 서버 / 컨테이너 또는 macOS 호스트에서 실행. |
 | `uv: command not found` | `curl -LsSf https://astral.sh/uv/install.sh \| sh`. |
 | `command -v zsh` 실패 | OS 패키지 매니저로 zsh/vim/tmux 미리 설치. `devenv doctor`로 점검. |
 | 두 번째 `devenv install`에서 git clone 실패 | 멱등성 가드가 깨진 케이스. `git_clone_idempotent` 직접 호출 없이 helper 사용 확인. |
