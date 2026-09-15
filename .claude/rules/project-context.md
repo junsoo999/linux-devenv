@@ -26,7 +26,8 @@ devenv/
 │   ├── _dir.py                 # $HOME/workspace, $HOME/worktrees 생성
 │   ├── _zsh.py                 # zsh + oh-my-zsh + p10k + 플러그인 + dotfile
 │   ├── _nvim.py                # nvim + Vundle + coc.nvim + 플러그인 + init.vim
-│   └── _tmux.py                # tmux + TPM + tmux.conf
+│   ├── _tmux.py                # tmux + TPM + tmux.conf
+│   └── _herdr.py               # herdr 바이너리 + config.toml
 └── packages/                   # 정적 설정 자산 (wheel package-data)
     ├── zsh/
     │   ├── zshrc               # → ~/.zshrc
@@ -36,7 +37,8 @@ devenv/
     ├── nvim/
     │   ├── init.vim            # → ~/.config/nvim/init.vim
     │   └── coc-settings.json   # → ~/.config/nvim/coc-settings.json
-    └── tmux/tmux.conf          # → ~/.tmux.conf
+    ├── tmux/tmux.conf          # → ~/.tmux.conf
+    └── herdr/config.toml       # → ~/.config/herdr/config.toml
 ```
 
 ### Core rules
