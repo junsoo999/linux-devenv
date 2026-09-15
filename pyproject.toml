@@ -1,6 +1,6 @@
 [project]
 name = "linux-devenv"
-description = "Linux 서버용 개발 환경(Z-Shell, Vim, Tmux)을 한 번에 설치하는 Click 기반 CLI"
+description = "Linux / macOS 개발 환경(Z-Shell, Neovim, Tmux, Herdr)을 한 번에 설치하는 Click 기반 CLI"
 readme = "README.md"
 authors = [
     { name = "Junsoo Kim", email = "js.kim@hyperaccel.ai" },
@@ -32,6 +32,7 @@ devenv = [
     "packages/zsh/*",
     "packages/nvim/*",
     "packages/tmux/*",
+    "packages/herdr/*",
 ]
 
 [dependency-groups]

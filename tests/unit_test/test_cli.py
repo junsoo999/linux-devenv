@@ -49,7 +49,7 @@ def test_list_shows_all_tools_with_status(tmp_path: Path) -> None:
     home.mkdir()
     result = runner.invoke(cli, ["list", "--home", str(home)])
     assert result.exit_code == 0
-    for name in ("dir", "zsh", "nvim", "tmux"):
+    for name in ("dir", "zsh", "nvim", "tmux", "herdr"):
         assert name in result.output
     assert "missing" in result.output
 
