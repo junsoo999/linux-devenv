@@ -159,8 +159,16 @@ def git_clone_idempotent(
     ctx: InstallContext,
     *,
     depth: int | None = None,
+    branch: str | None = None,
 ) -> bool:
     """Clone ``url`` into ``dest`` if absent.
+
+    Args:
+        url: Git remote URL.
+        dest: Checkout directory under ``ctx.home``.
+        ctx: InstallContext.
+        depth: Shallow-clone depth (``--depth``), if any.
+        branch: Branch or tag to check out (``--branch``), if any.
 
     Returns:
         True when a clone happened, False when ``dest`` already existed.
@@ -172,6 +180,8 @@ def git_clone_idempotent(
     cmd = ["git", "clone"]
     if depth is not None:
         cmd += ["--depth", str(depth)]
+    if branch is not None:
+        cmd += ["--branch", branch]
     cmd += [url, str(dest)]
     run(cmd, ctx)
     return True
