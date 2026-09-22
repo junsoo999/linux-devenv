@@ -2,7 +2,8 @@
 
 Provides ``devenv`` subcommands that bootstrap a Linux server dev
 environment (workspace directory, oh-my-zsh + powerlevel10k + zsh
-plugins, nvim + Vundle + coc.nvim, tmux + TPM plugins, herdr) and lay out the
+plugins, nvim + Vundle + coc.nvim, tmux + TPM plugins, herdr, nvm, Claude
+Code) and lay out the
 managed dotfiles into the user's home directory.
 
 Each tool installer is idempotent; running ``devenv install`` more than
@@ -18,7 +19,7 @@ from pathlib import Path
 import click
 
 from devenv import __version__
-from devenv.cli import _dir, _herdr, _nvim, _tmux, _zsh
+from devenv.cli import _claude, _dir, _herdr, _nvim, _nvm, _tmux, _zsh
 from devenv.cli._installer import (
     CommandMissingError,
     InstallContext,
@@ -27,7 +28,7 @@ from devenv.cli._installer import (
 )
 from devenv.cli._platform import ensure_supported, is_supported
 
-# Order matters: workspace dir → shell → editor → multiplexer → herdr.
+# Order matters: workspace dir → shell → editor → multiplexer → herdr → nvm → claude.
 _TOOL_REGISTRY: dict[str, "_ToolEntry"] = {}
 
 
@@ -49,6 +50,8 @@ _register("zsh", "Z-Shell + oh-my-zsh + powerlevel10k + 플러그인 + dotfile",
 _register("nvim", "Neovim + Vundle + coc.nvim + 플러그인 + init.vim", _nvim.install)
 _register("tmux", "Tmux + TPM + 플러그인 + tmux.conf", _tmux.install)
 _register("herdr", "Herdr (herdr.dev) 바이너리 + config.toml", _herdr.install)
+_register("nvm", "nvm (Node Version Manager) + Node.js LTS", _nvm.install)
+_register("claude", "Claude Code CLI (네이티브 installer)", _claude.install)
 
 
 _HOME_OPTION = click.option(
@@ -171,6 +174,8 @@ def _tool_status(name: str, home: Path) -> str:
         "nvim": home / ".config" / "nvim" / "init.vim",
         "tmux": home / ".tmux.conf",
         "herdr": home / ".config" / "herdr" / "config.toml",
+        "nvm": home / ".nvm" / "nvm.sh",
+        "claude": home / ".local" / "bin" / "claude",
     }
     marker = markers.get(name)
     if marker is None:
@@ -186,7 +191,7 @@ def where() -> None:
     click.echo("tools   : " + ", ".join(_TOOL_REGISTRY))
 
 
-@cli.command(help="선행 조건(zsh / tmux / git / curl / tar + nvim/node/herdr 선택)을 점검합니다.")
+@cli.command(help="선행 조건(zsh / tmux / git / curl / tar + nvim/node/herdr/claude 선택)을 점검합니다.")
 def doctor() -> None:
     """Probe the host for required commands and OS."""
     import platform as _platform
@@ -203,10 +208,10 @@ def doctor() -> None:
 
     import shutil
 
-    # ``nvim`` and ``herdr`` are bootstrapped by `devenv install` itself
+    # ``nvim``, ``node``, ``herdr`` and ``claude`` are bootstrapped by `devenv install` itself
     # when missing, so report them as informational rather than a hard failure.
     required = ("zsh", "tmux", "git", "curl", "tar")
-    optional = ("nvim", "node", "herdr")
+    optional = ("nvim", "node", "herdr", "claude")
     for cmd in required:
         path = shutil.which(cmd)
         if path:
