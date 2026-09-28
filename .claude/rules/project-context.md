@@ -27,7 +27,9 @@ devenv/
 │   ├── _zsh.py                 # zsh + oh-my-zsh + p10k + 플러그인 + dotfile
 │   ├── _nvim.py                # nvim + Vundle + coc.nvim + 플러그인 + init.vim
 │   ├── _tmux.py                # tmux + TPM + tmux.conf
-│   └── _herdr.py               # herdr 바이너리 + config.toml
+│   ├── _herdr.py               # herdr 바이너리 + config.toml
+│   ├── _nvm.py                 # nvm (~/.nvm, 고정 태그) + `nvm install --lts`
+│   └── _claude.py              # Claude Code CLI (네이티브 installer, dotfile 없음)
 └── packages/                   # 정적 설정 자산 (wheel package-data)
     ├── zsh/
     │   ├── zshrc               # → ~/.zshrc
@@ -64,7 +66,7 @@ devenv = "devenv.cli:cli"
 - `devenv setup [--home PATH]` — workspace 디렉토리만
 - `devenv list [--installed]` — 도구 목록 + 설치 상태
 - `devenv where` — package-data 경로, 기본 HOME
-- `devenv doctor` — 선행 조건 점검 (지원 OS 여부, zsh/nvim/tmux/git/curl)
+- `devenv doctor` — 선행 조건 점검 (지원 OS 여부, zsh/nvim/tmux/git/curl, node/herdr/claude 선택)
 - `devenv clean [--dry-run]` — 백업 파일 정리
 
 ## Makefile은 개발자 부트스트랩 전용

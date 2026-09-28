@@ -87,7 +87,8 @@ plugins=(git          # git 명령어 단축키 및 프롬프트 정보
     iterm2            # iterm2 명령어 자동완성
     kube-ps1          # kube-ps1 명령어 자동완성
     aliases           # 명령어 단축키
-    tmux              # tmux 명령어 자동완성)
+    tmux              # tmux 명령어 자동완성
+    nvm               # nvm 자동 로드 (~/.nvm))
     fzf
     # 외부 플러그인
     zsh-autosuggestions          # 명령어 자동 추천
