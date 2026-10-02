@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import os
+
 from devenv.cli._installer import (
     InstallContext,
     deploy_dotfile,
@@ -34,11 +36,22 @@ def install(ctx: InstallContext) -> None:
     # ``install_plugins`` standalone we must seed it ourselves. Without
     # this TPM aborts with "FATAL: Tmux Plugin Manager not configured
     # in tmux.conf".
-    plugin_path = str(ctx.home / ".tmux" / "plugins") + "/"
-    run(
-        ["tmux", "set-environment", "-g", "TMUX_PLUGIN_MANAGER_PATH", plugin_path],
-        ctx,
-    )
+    #
+    # ``set-environment`` needs a live server, which a fresh machine
+    # (or a container) does not have. Spawn a throwaway detached session
+    # to keep one alive for the duration of the plugin install, and kill
+    # only that session afterwards so a user's existing server and its
+    # sessions are left untouched.
+    session = f"devenv-tpm-{os.getpid()}"
+    run(["tmux", "new-session", "-d", "-s", session], ctx)
+    try:
+        plugin_path = str(ctx.home / ".tmux" / "plugins") + "/"
+        run(
+            ["tmux", "set-environment", "-g", "TMUX_PLUGIN_MANAGER_PATH", plugin_path],
+            ctx,
+        )
 
-    install_plugins = tpm_dir / "bin" / "install_plugins"
-    run([str(install_plugins)], ctx, check=False)
+        install_plugins = tpm_dir / "bin" / "install_plugins"
+        run([str(install_plugins)], ctx, check=False)
+    finally:
+        run(["tmux", "kill-session", "-t", session], ctx, check=False)
